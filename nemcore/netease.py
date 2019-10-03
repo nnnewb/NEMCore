@@ -70,10 +70,6 @@ class NetEase(object):
             cookie = self.make_cookie(name, value)
             self.session.cookies.set_cookie(cookie)
 
-    @property
-    def toplists(self):
-        return [l[0] for l in c.TOP_LIST_ALL.values()]
-
     def logout(self):
         """ 登出
 
@@ -198,7 +194,7 @@ class NetEase(object):
         return data
 
     @api_wrapper()
-    def login_status(self) -> dict:
+    def get_login_status(self) -> dict:
         """ 检查登录状态
 
         HACK: 根据云音乐首页的js里，某句GUser赋值的语句赋值内容是否是空对象，来判断是否登录。
@@ -258,7 +254,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def user_playlist(self, uid=None, offset=0, limit=50):
+    def get_user_playlist(self, uid=None, offset=0, limit=50):
         """ 查看用户歌单
 
         :param uid: 用户ID,不传递时指自己的歌单
@@ -273,7 +269,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def recommend_resource(self):
+    def get_recommend_resource(self):
         """ 获得日推歌单列表。
 
         NOTE: 注意这个不是通常所说的日推，而是推荐的歌单列表，每日更新。
@@ -284,7 +280,7 @@ class NetEase(object):
         return self.request('POST', path)
 
     @api_wrapper()
-    def recommend_songs(self, total=True, offset=0, limit=20):
+    def get_recommend_songs(self, total=True, offset=0, limit=20):
         """ 获得每日推荐歌曲
         """
         path = '/weapi/v1/discovery/recommend/songs'  # NOQA
@@ -292,7 +288,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def personal_fm(self):
+    def get_personal_fm(self):
         """ 私人FM
         """
         path = '/weapi/v1/radio/get'
@@ -344,7 +340,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def new_albums(self, offset=0, limit=50):
+    def get_new_albums(self, offset=0, limit=50):
         """ 新碟上架
 
         :param offset: 结果偏移，和limit结合做分页
@@ -360,7 +356,8 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def top_playlists(self, category='全部', order='hot', offset=0, limit=50):
+    def get_top_playlists(self, category='全部', order='hot', offset=0,
+                          limit=50):
         """ 歌单（网友精选碟）
 
         对应[首页>>发现音乐>>歌单](http://music.163.com/#/discover/playlist/)
@@ -386,7 +383,7 @@ class NetEase(object):
         return self.request('POST', path)
 
     @api_wrapper()
-    def playlist_detail(self, playlist_id):
+    def get_playlist_detail(self, playlist_id):
         """ 歌单详情
 
         :param playlist_id: 歌单ID
@@ -402,7 +399,7 @@ class NetEase(object):
         return self.request('POST', path, params, {'code': -1}, custom_cookies)
 
     @api_wrapper()
-    def top_artists(self, offset=0, limit=100):
+    def get_top_artists(self, offset=0, limit=100):
         """ 热门歌手
 
         对应[首页>>发现音乐>>歌手](https://music.163.com/#/discover/artist/)
@@ -415,7 +412,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def top_songs(self, idx=0, offset=0, limit=100):
+    def get_top_songs(self, idx=0, offset=0, limit=100):
         """ 热门单曲榜
 
         对应[首页>>发现音乐>>排行榜](https://music.163.com/#/discover/toplist?id=3779629)
@@ -425,7 +422,7 @@ class NetEase(object):
         :param limit: 结果集大小，和offset结合做分页
         """
         playlist_id = c.TOP_LIST_ALL[idx][1]
-        return self.playlist_detail(playlist_id)
+        return self.get_playlist_detail(playlist_id)
 
     @api_wrapper()
     def get_artist_info(self, artist_id):
@@ -460,7 +457,7 @@ class NetEase(object):
         return self.request('POST', path)
 
     @api_wrapper()
-    def song_comments(self, music_id, offset=0, total='false', limit=100):
+    def get_song_comments(self, music_id, offset=0, total='false', limit=100):
         """ 获取歌曲评论
 
         :param music_id: 歌曲ID
@@ -473,7 +470,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def songs_detail(self, ids):
+    def get_songs_detail(self, ids):
         """ 获取歌曲详情
 
         :param ids: 歌曲ID列表
@@ -488,7 +485,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def songs_url(self, ids, quality):
+    def get_songs_url(self, ids, quality):
         """ 获取歌曲播放url
 
         :param ids: 歌曲id列表
@@ -501,7 +498,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def song_lyric(self, music_id):
+    def get_song_lyric(self, music_id):
         """ 获取歌词
 
         ApiEndpoint: http://music.163.com/api/song/lyric?os=osx&id= &lv=-1&kv=-1&tv=-1
@@ -513,7 +510,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def djchannels(self, offset=0, limit=50):
+    def get_djchannels(self, offset=0, limit=50):
         """ 热门主播电台
 
         今日最热（0）, 本周最热（10），历史最热（20），最新节目（30）
@@ -525,7 +522,7 @@ class NetEase(object):
         return self.request('POST', path, params)
 
     @api_wrapper()
-    def djprograms(self, radio_id, asc=False, offset=0, limit=50):
+    def get_djprograms(self, radio_id, asc=False, offset=0, limit=50):
         """ 电台节目清单
         """
         path = '/weapi/dj/program/byradio'
@@ -537,7 +534,7 @@ class NetEase(object):
             return []
 
         if dig_type == 'songs' or dig_type == 'fmsongs':
-            urls = self.songs_url([s['id'] for s in data])
+            urls = self.get_songs_url([s['id'] for s in data])
             timestamp = time.time()
             # api 返回的 urls 的 id 顺序和 data 的 id 顺序不一致
             # 为了获取到对应 id 的 url，对返回的 urls 做一个 id2index 的缓存
@@ -556,7 +553,7 @@ class NetEase(object):
                 s['get_time'] = timestamp
             return Parse.songs(data)
         elif dig_type == 'refresh_urls':
-            urls_info = self.songs_url(data)
+            urls_info = self.get_songs_url(data)
             timestamp = time.time()
 
             songs = []

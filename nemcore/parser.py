@@ -9,7 +9,7 @@ class Parse(object):
     @classmethod
     def song_url(cls, song):
         if 'url' in song:
-            # songs_url resp
+            # get_songs_url resp
             url = song['url']
             if url is None:
                 return Parse._song_url_by_id(song['id'])
@@ -22,7 +22,7 @@ class Parse(object):
                 quality = 'LD'
             return url, '{} {}k'.format(quality, br // 1000)
         else:
-            # songs_detail resp
+            # get_songs_detail resp
             return Parse._song_url_by_id(song['id'])
 
     @classmethod
