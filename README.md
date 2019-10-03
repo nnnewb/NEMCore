@@ -6,7 +6,7 @@
 
 主要代码来自[NetEase-MusicBox](https://github.com/darknessomi/musicbox/)，非常感谢每一位该项目的贡献者。
 
-## 后续计划
+## v1.0 开发计划
 
 - [x] 添加测试用例
 - [ ] 规范命名和返回值结构
