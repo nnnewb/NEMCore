@@ -1,5 +1,6 @@
 import os
 from collections import OrderedDict
+from nemcore.utils import random_jsession_id, random_nuid
 
 
 class Constant(object):
@@ -11,6 +12,14 @@ class Constant(object):
     log_path = os.path.join(conf_dir, 'musicbox.log')
     cache_path = os.path.join(conf_dir, 'nemcache')
 
+
+BASE_COOKIES = {
+    'JSESSIONID-WYYY': random_jsession_id(),
+    '_iuqxldmzr_': '32',
+    # FIXME: key重复了，但确实可以工作，也解决了 -460 cheating 的问题。这部分要完善一下。
+    '_ntes_nnid': random_nuid(),
+    '_ntes_nuid': random_nuid(with_timestamp=False)
+}
 
 DEFAULT_TIMEOUT = 10
 BASE_URL = 'http://music.163.com'

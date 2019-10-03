@@ -15,7 +15,6 @@ from nemcore.encrypt import encrypted_request
 from nemcore.exceptions import api_wrapper
 from nemcore.parser import Parse
 from nemcore.storage import Storage
-from nemcore.utils import BASE_COOKIES
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +65,7 @@ class NetEase(object):
         - [Issue #745](https://github.com/darknessomi/musicbox/issues/745)
         - [参考代码](https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580)
         """
-        for name, value in BASE_COOKIES.items():
+        for name, value in c.BASE_COOKIES.items():
             cookie = self.make_cookie(name, value)
             self.session.cookies.set_cookie(cookie)
 
