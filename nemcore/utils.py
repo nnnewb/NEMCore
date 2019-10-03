@@ -1,6 +1,6 @@
-from time import time
 import random
-from string import digits, ascii_letters, ascii_lowercase
+from string import ascii_letters, ascii_lowercase, digits
+from time import time
 
 
 def _t():

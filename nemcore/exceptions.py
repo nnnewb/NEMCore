@@ -1,5 +1,5 @@
-from typing import Mapping
 from functools import wraps
+from typing import Mapping
 
 
 class NetEaseError(Exception):
