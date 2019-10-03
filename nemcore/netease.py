@@ -15,17 +15,15 @@ import time
 from collections import OrderedDict
 from hashlib import md5
 from http.cookiejar import Cookie, LWPCookieJar
+import re
 
 import requests
-import requests_cache
-import six
 
+from .exceptions import api_wrapper
 from .const import Constant
 from .encrypt import encrypted_request
 from .storage import Storage
 from .utils import BASE_COOKIES
-
-requests_cache.install_cache(Constant.cache_path, expire_after=3600)
 
 log = logging.getLogger(__name__)
 
@@ -196,44 +194,47 @@ class Parse(object):
 
 class NetEase(object):
     def __init__(self):
+        # yapf: disable
         self.header = {
-            'Accept':
-            '*/*',
-            'Accept-Encoding':
-            'gzip,deflate,sdch',
-            'Accept-Language':
-            'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
-            'Connection':
-            'keep-alive',
-            'Content-Type':
-            'application/x-www-form-urlencoded',
-            'Host':
-            'music.163.com',
-            'Referer':
-            'http://music.163.com',
-            'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) '  # NOTE: NO COMMA, attend to concat strings
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/59.0.3071.115 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip,deflate,sdch',
+            'Accept-Language': 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
+            'Connection': 'keep-alive',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'music.163.com',
+            'Referer': 'http://music.163.com',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',  # noqa: E501
         }
+        # yapf: enable
 
-        self.storage = Storage()
-        cookie_jar = LWPCookieJar(self.storage.cookie_path)
-        cookie_jar.load()
+        self.storage = Storage(Constant.storage_path)
         self.session = requests.Session()
-        self.session.cookies = cookie_jar
-        for cookie in cookie_jar:
+        self.session.cookies = LWPCookieJar(Constant.cookie_path)
+
+        try:
+            self.session.cookies.load()
+        except FileNotFoundError:
+            self.session.cookies.save()
+
+        for cookie in self.session.cookies:
             if cookie.is_expired():
-                cookie_jar.clear()
-                self.storage.database['user'] = {
-                    'username': '',
-                    'password': '',
-                    'user_id': '',
-                    'nickname': '',
-                }
-                self.storage.save()
+                # QUESTION: 任何一个cookie过期都导致登出？
+                self.session.cookies.clear()
+                self.storage.logout()
                 break
 
+        self._set_base_cookies()
+
+    def _set_base_cookies(self):
+        """ 设置基础cookie
+
+        无cookie时调用登录等接口会出现 -490 cheating 这样的错误
+
+        reference:
+
+        - [Issue #745](https://github.com/darknessomi/musicbox/issues/745)
+        - [参考代码](https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580)
+        """
         for name, value in BASE_COOKIES.items():
             cookie = self.make_cookie(name, value)
             self.session.cookies.set_cookie(cookie)
@@ -243,15 +244,14 @@ class NetEase(object):
         return [l[0] for l in TOP_LIST_ALL.values()]
 
     def logout(self):
+        """ 登出
+
+        清除所有cookie和storage里的用户信息
+        """
+        self.storage.logout()
         self.session.cookies.clear()
-        self.storage.database['user'] = {
-            'username': '',
-            'password': '',
-            'user_id': '',
-            'nickname': '',
-        }
+        self._set_base_cookies()
         self.session.cookies.save()
-        self.storage.save()
 
     def _raw_request(self, method, endpoint, data=None):
         if method == 'GET':
@@ -313,13 +313,36 @@ class NetEase(object):
         finally:
             return data
 
-    def login(self, username, password):
+    @api_wrapper()
+    def login(self, username: str, password: str):
+        """ 登录网易云音乐账号
+
+        支持邮箱登录和手机号码登录，cookies 会自动持久化到 ~/.netease-musicbox/cookies
+        返回登录结果。
+
+        :param username: 用户名，如果是纯数字字符串，自动使用手机号码登录接口
+        :param password: 密码
+
+        Reference:
+
+        - [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/module/login.js)
+
+        api endpoints:
+
+        - `/weapi/login/cellphone`
+        - `/weapi/login`
+
+        :return: 正常返回字典 {...}，否则抛出异常
+        """
+        username = username.strip()
+        password = md5(password.encode('utf-8')).hexdigest()
         self.session.cookies.load()
+
         if username.isdigit():
             path = '/weapi/login/cellphone'
             params = dict(
                 phone=username,
-                password=md5(six.ensure_binary(password)).hexdigest(),
+                password=password,
                 rememberLogin='true',
             )
         else:
@@ -327,63 +350,165 @@ class NetEase(object):
             # see https://github.com/Binaryify/NeteaseCloudMusicApi/blob/master/router/login.js#L15
             client_token = '1_jVUMqWEPke0/1/Vu56xCmJpo5vP1grjn_SOVVDzOc78w8OKLVZ2JH7IfkjSXqgfmh'
             path = '/weapi/login'
-            params = dict(username=username, password=password, rememberLogin='true', clientToken=client_token)
+            params = dict(
+                username=username,
+                password=password,
+                rememberLogin='true',
+                clientToken=client_token,
+            )
+
         data = self.request('POST', path, params)
         self.session.cookies.save()
+
+        if data['code'] == 200:
+            self.storage.login(data['account'], data['profile'])
+
         return data
 
-    # 每日签到
+    @api_wrapper()
+    def login_status(self) -> dict:
+        """ 检查登录状态
+
+        :return: 如果已经登录，返回用户信息字典，否则抛出异常
+        """
+        profile, bindings = None, None
+        quote_regex = r'([\{\s,])(\w+)(:)'
+        resp = self._raw_request('GET', BASE_URL)
+        profile_result = re.search(r'GUser\s*=\s*([^;]+);', resp.text)
+        bindings_result = re.search(r'GBinds\s*=\s*([^;]+);', resp.text)
+
+        if not profile_result or not bindings_result:
+            return {'code': 301, 'message': 'Not login'}
+
+        if profile_result and profile_result.groups():
+            text = profile_result.groups()[0]
+            json_obj = re.sub(quote_regex, r'\1"\2"\3', text)
+            profile = json.loads(json_obj)
+
+        if bindings_result and bindings_result.groups():
+            text = bindings_result.groups()[0]
+            json_obj = re.sub(quote_regex, r'\1"\2"\3', text)
+            bindings = json.loads(json_obj)
+
+        if not profile or not bindings:
+            return {'code': 301, 'message': 'Not login'}
+
+        return {
+            'code': 200,
+            'message': 'ok',
+            'profile': profile,
+            'bindings': bindings
+        }
+
+    @api_wrapper()
+    def login_refresh(self):
+        """ 刷新登录状态
+
+        :return: 成功返回{'code': 200}，反之抛出异常
+        """
+        data = self.request('GET', '/weapi/login/token/refresh')
+        if data['code'] == -1:
+            # 已知这个API会返回空的body，发现错误码是默认值-1时改成200
+            data['code'] = 200
+        return data
+
+    @api_wrapper()
     def daily_task(self, is_mobile=True):
+        """ 每日签到
+
+        :param is_mobile: 是否是手机签到
+        :return: 正常返回字典{point,code}，错误抛出异常
+        """
         path = '/weapi/point/dailyTask'
         params = dict(type=0 if is_mobile else 1)
         return self.request('POST', path, params)
 
-    # 用户歌单
-    def user_playlist(self, uid, offset=0, limit=50):
+    @api_wrapper()
+    def user_playlist(self, uid=None, offset=0, limit=50):
+        """ 查看用户歌单
+
+        :param uid: 用户ID,不传递时指自己的歌单
+        :return: 正常返回 {code:int,more:bool,playlist:[]}
+        """
+        if not uid:
+            uid = self.storage.uid
+            if uid is None:
+                raise ValueError('Not login .')
         path = '/weapi/user/playlist'
         params = dict(uid=uid, offset=offset, limit=limit, csrf_token='')
-        return self.request('POST', path, params).get('playlist', [])
+        return self.request('POST', path, params)
 
-    # 每日推荐歌单
+    @api_wrapper()
     def recommend_resource(self):
-        path = '/weapi/v1/discovery/recommend/resource'
-        return self.request('POST', path).get('recommend', [])
+        """ 获得日推歌单列表。
 
-    # 每日推荐歌曲
-    def recommend_playlist(self, total=True, offset=0, limit=20):
+        NOTE: 注意这个不是通常所说的日推，而是推荐的歌单列表，每日更新。
+
+        NOTE: 日推请转到 `recommend_playlist`
+        """
+        path = '/weapi/v1/discovery/recommend/resource'
+        return self.request('POST', path)
+
+    @api_wrapper()
+    def recommend_songs(self, total=True, offset=0, limit=20):
+        """ 获得每日推荐歌曲
+        """
         path = '/weapi/v1/discovery/recommend/songs'  # NOQA
         params = dict(total=total, offset=offset, limit=limit, csrf_token='')
-        return self.request('POST', path, params).get('recommend', [])
+        return self.request('POST', path, params)
 
-    # 私人FM
+    @api_wrapper()
     def personal_fm(self):
+        """ 私人FM
+        """
         path = '/weapi/v1/radio/get'
-        return self.request('POST', path).get('data', [])
+        return self.request('POST', path)
 
-    # like
+    @api_wrapper()
     def fm_like(self, songid, like=True, time=25, alg='itembased'):
+        """ 私人FM操作：喜欢
+
+        NOTE: 这个 API 可能影响云音乐今后的日推和FM结果。
+        """
         path = '/weapi/radio/like'
         params = dict(alg=alg, trackId=songid, like='true' if like else 'false', time=time)
-        return self.request('POST', path, params)['code'] == 200
+        return self.request('POST', path, params)
 
-    # FM trash
+    @api_wrapper()
     def fm_trash(self, songid, time=25, alg='RT'):
+        """ 私人FM操作：不喜欢
+
+        NOTE: 这个API可能影响云音乐今后的日推和FM结果。
+        """
         path = '/weapi/radio/trash/add'
         params = dict(
             songId=songid,
             alg=alg,
             time=time,
         )
-        return self.request('POST', path, params)['code'] == 200
+        return self.request('POST', path, params)
 
-    # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
+    @api_wrapper()
     def search(self, keywords, stype=1, offset=0, total='true', limit=50):
+        """ 搜索歌曲
+
+        :param keywords: 搜索关键词
+        :param stype: 搜索类型，可选值：单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
+        :param offset: 搜索结果偏移，和limit结合做分页
+        :param total: TODO
+        :param limit: 搜索结果集大小，和offset结合做分页
+        """
         path = '/weapi/search/get'
         params = dict(s=keywords, type=stype, offset=offset, total=total, limit=limit)
-        return self.request('POST', path, params).get('result', {})
+        return self.request('POST', path, params)
 
-    # 新碟上架
+    @api_wrapper()
     def new_albums(self, offset=0, limit=50):
+        """ 新碟上架
+
+        :param offset: 结果偏移，和limit结合做分页
+        :param limit: 结果集大小，和offset结合做分页
+        """
         path = '/weapi/album/new'
         params = dict(
             area='ALL',
@@ -391,59 +516,119 @@ class NetEase(object):
             total=True,
             limit=limit,
         )
-        return self.request('POST', path, params).get('albums', [])
+        return self.request('POST', path, params)
 
-    # 歌单（网友精选碟） hot||new http://music.163.com/#/discover/playlist/
+    @api_wrapper()
     def top_playlists(self, category='全部', order='hot', offset=0, limit=50):
+        """ 歌单（网友精选碟）
+
+        对应[首页>>发现音乐>>歌单](http://music.163.com/#/discover/playlist/)
+
+        :param category: 歌单分类
+        :param order: 排序方法，可选值 TODO
+        :param offset: 结果偏移，和Limit结合做分页
+        :param limit: 结果集大小，和offset结合做分页
+        """
         path = '/weapi/playlist/list'
         params = dict(cat=category, order=order, offset=offset, total='true', limit=limit)
-        return self.request('POST', path, params).get('playlists', [])
+        return self.request('POST', path, params)
 
+    @api_wrapper()
     def playlist_catelogs(self):
+        """ catalogs
+        """
         path = '/weapi/playlist/catalogue'
         return self.request('POST', path)
 
-    # 歌单详情
+    @api_wrapper()
     def playlist_detail(self, playlist_id):
+        """ 歌单详情
+
+        :param playlist_id: 歌单ID
+        """
         path = '/weapi/v3/playlist/detail'
         params = dict(id=playlist_id, total='true', limit=1000, n=1000, offest=0)
         # cookie添加os字段
         custom_cookies = dict(os=platform.system())
-        return self.request('POST', path, params, {'code': -1}, custom_cookies).get('playlist', {}).get('tracks', [])
+        return self.request('POST', path, params, {'code': -1}, custom_cookies)
 
-    # 热门歌手 http://music.163.com/#/discover/artist/
+    @api_wrapper()
     def top_artists(self, offset=0, limit=100):
+        """ 热门歌手
+
+        对应[首页>>发现音乐>>歌手](https://music.163.com/#/discover/artist/)
+
+        :param offset: 结果偏移，和Limit结合做分页
+        :param limit: 结果集大小，和offset结合做分页
+        """
         path = '/weapi/artist/top'
         params = dict(offset=offset, total=True, limit=limit)
-        return self.request('POST', path, params).get('artists', [])
+        return self.request('POST', path, params)
 
-    # 热门单曲 http://music.163.com/discover/toplist?id=
-    def top_songlist(self, idx=0, offset=0, limit=100):
+    @api_wrapper()
+    def top_songs(self, idx=0, offset=0, limit=100):
+        """ 热门单曲榜
+
+        对应[首页>>发现音乐>>排行榜](https://music.163.com/#/discover/toplist?id=3779629)
+
+        :param idx: 榜单ID，参考 netease.TOP_LIST_ALL
+        :param offset: 结果偏移，和Limit结合做分页
+        :param limit: 结果集大小，和offset结合做分页
+        """
         playlist_id = TOP_LIST_ALL[idx][1]
         return self.playlist_detail(playlist_id)
 
-    # 歌手单曲
-    def artists(self, artist_id):
-        path = '/weapi/v1/artist/{}'.format(artist_id)
-        return self.request('POST', path).get('hotSongs', [])
+    @api_wrapper()
+    def get_artist_info(self, artist_id):
+        """ 获取歌手信息
 
-    def get_artist_album(self, artist_id, offset=0, limit=50):
+        包括热门单曲等。
+
+        :param artist_id: 歌手ID
+        """
+        path = '/weapi/v1/artist/{}'.format(artist_id)
+        return self.request('POST', path)
+
+    @api_wrapper()
+    def get_artist_albums(self, artist_id, offset=0, limit=50):
+        """ 获取歌手专辑
+
+        :param artist_id: 歌手ID
+        :param offset: 结果偏移，和Limit结合做分页
+        :param limit: 结果集大小，和offset结合做分页
+        """
         path = '/weapi/artist/albums/{}'.format(artist_id)
         params = dict(offset=offset, total=True, limit=limit)
-        return self.request('POST', path, params).get('hotAlbums', [])
+        return self.request('POST', path, params)
 
-    # album id --> song id set
-    def album(self, album_id):
+    @api_wrapper()
+    def get_album_info(self, album_id):
+        """ 获取专辑信息
+
+        :param album_id: 专辑ID
+        """
         path = '/weapi/v1/album/{}'.format(album_id)
-        return self.request('POST', path).get('songs', [])
+        return self.request('POST', path)
 
+    @api_wrapper()
     def song_comments(self, music_id, offset=0, total='false', limit=100):
+        """ 获取歌曲评论
+
+        :param music_id: 歌曲ID
+        :param offset: 结果偏移，和Limit结合做分页
+        :param total: TODO
+        :param limit: 结果集大小，和offset结合做分页
+        """
         path = '/weapi/v1/resource/comments/R_SO_4_{}/'.format(music_id)
         params = dict(rid=music_id, offset=offset, total=total, limit=limit)
         return self.request('POST', path, params)
 
-    # song ids --> song urls ( details )
+    @api_wrapper()
     def songs_detail(self, ids):
+        """ 获取歌曲详情
+
+        :param ids: 歌曲ID列表
+        """
         path = '/weapi/v3/song/detail'
         params = dict(
             c=json.dumps([{
@@ -451,59 +636,57 @@ class NetEase(object):
             } for _id in ids]),
             ids=json.dumps(ids),
         )
-        return self.request('POST', path, params).get('songs', [])
+        return self.request('POST', path, params)
 
+    @api_wrapper()
     def songs_url(self, ids, quality):
+        """ 获取歌曲播放url
+
+        :param ids: 歌曲id列表
+        :param quality: 音质档次，可选值0-2，分别对应 320kbps,192kbps,128kbps 三种质量
+        """
         rate_map = {0: 320000, 1: 192000, 2: 128000}
 
         path = '/weapi/song/enhance/player/url'
         params = dict(ids=ids, br=rate_map[quality])
-        return self.request('POST', path, params).get('data', [])
+        return self.request('POST', path, params)
 
-    # lyric http://music.163.com/api/song/lyric?os=osx&id= &lv=-1&kv=-1&tv=-1
+    @api_wrapper()
     def song_lyric(self, music_id):
+        """ 获取歌词
+
+        ApiEndpoint: http://music.163.com/api/song/lyric?os=osx&id= &lv=-1&kv=-1&tv=-1
+
+        :param music_id: 歌曲ID
+        """
         path = '/weapi/song/lyric'
         params = dict(os='osx', id=music_id, lv=-1, kv=-1, tv=-1)
-        lyric = self.request('POST', path, params).get('lrc', {}).get('lyric', [])
-        if not lyric:
-            return []
-        else:
-            return lyric.split('\n')
+        return self.request('POST', path, params)
 
-    def song_tlyric(self, music_id):
-        path = '/weapi/song/lyric'
-        params = dict(os='osx', id=music_id, lv=-1, kv=-1, tv=-1)
-        lyric = self.request('POST', path, params).get('tlyric', {}).get('lyric', [])
-        if not lyric:
-            return []
-        else:
-            return lyric.split('\n')
-
-    # 今日最热（0）, 本周最热（10），历史最热（20），最新节目（30）
+    @api_wrapper()
     def djchannels(self, offset=0, limit=50):
+        """ 热门主播电台
+
+        今日最热（0）, 本周最热（10），历史最热（20），最新节目（30）
+
+        对应[首页>>发现音乐>>主播电台](https://music.163.com/#/discover/djradio)
+        """
         path = '/weapi/djradio/hot/v1'
         params = dict(limit=limit, offset=offset)
-        channels = self.request('POST', path, params).get('djRadios', [])
-        return channels
+        return self.request('POST', path, params)
 
+    @api_wrapper()
     def djprograms(self, radio_id, asc=False, offset=0, limit=50):
+        """ 电台节目清单
+        """
         path = '/weapi/dj/program/byradio'
         params = dict(asc=asc, radioId=radio_id, offset=offset, limit=limit)
-        programs = self.request('POST', path, params).get('programs', [])
-        return [p['mainSong'] for p in programs]
-
-    # 获取版本
-    def get_version(self):
-        action = 'https://pypi.org/pypi/NetEase-MusicBox/json'
-        try:
-            return requests.get(action).json()
-        except requests.exceptions.RequestException as e:
-            log.error(e)
-            return {}
+        return self.request('POST', path, params)
 
     def dig_info(self, data, dig_type):
         if not data:
             return []
+
         if dig_type == 'songs' or dig_type == 'fmsongs':
             urls = self.songs_url([s['id'] for s in data])
             timestamp = time.time()
@@ -523,7 +706,6 @@ class NetEase(object):
                 s['expires'] = urls[url_index]['expi']
                 s['get_time'] = timestamp
             return Parse.songs(data)
-
         elif dig_type == 'refresh_urls':
             urls_info = self.songs_url(data)
             timestamp = time.time()
@@ -537,19 +719,14 @@ class NetEase(object):
                 song['get_time'] = timestamp
                 songs.append(song)
             return songs
-
         elif dig_type == 'artists':
             return Parse.artists(data)
-
         elif dig_type == 'albums':
             return Parse.albums(data)
-
         elif dig_type == 'playlists' or dig_type == 'top_playlists':
             return Parse.playlists(data)
-
         elif dig_type == 'playlist_classes':
             return list(PLAYLIST_CLASSES.keys())
-
         elif dig_type == 'playlist_class_detail':
             return PLAYLIST_CLASSES[data]
         else:
