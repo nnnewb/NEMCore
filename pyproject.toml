@@ -1,8 +1,18 @@
 [tool.poetry]
 name = "nemcore"
 version = "0.1.2"
-description = "NetEase Cloud Music ApiClient extract from NetEase-MusicBox"
+description = "NetEase Cloud Music ApiClient extracted from NetEase-MusicBox"
 authors = ["weak_ptr <weak_ptr@163.com>"]
+license = 'GPL-v3'
+readme = "README.md"
+homepage = "https://github.com/nnnewb/NEMCore"
+keywords = ["netease","sdk","netease cloudmusic"]
+classifier = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: Chinese (Simplified)",
+    "Topic :: Software Development :: Libraries",
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
