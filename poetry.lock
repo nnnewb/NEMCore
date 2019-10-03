@@ -263,6 +263,14 @@ version = "1.12.0"
 
 [[package]]
 category = "main"
+description = "Python Library for Tom's Obvious, Minimal Language"
+name = "toml"
+optional = false
+python-versions = "*"
+version = "0.10.0"
+
+[[package]]
+category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -290,7 +298,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "f39f9082b0d5175547ba3fea06cbf7ed8fe7462b74ea291e999f0c75238c1b97"
+content-hash = "6901f4f6b5903b17723e3193bec1c1eaac0e823cf855213158598589c1ed3130"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -321,6 +329,7 @@ python-dotenv = ["debd928b49dbc2bf68040566f55cdb3252458036464806f4094487244e2a40
 requests = ["11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4", "9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"]
 requests-cache = ["813023269686045f8e01e2289cc1e7e9ae5ab22ddd1e2849a9093ab3ab7270eb", "81e13559baee64677a7d73b85498a5a8f0639e204517b5d05ff378e44a57831a"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
+toml = ["229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c", "235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", "f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"]
 urllib3 = ["3de946ffbed6e6746608990594d08faac602528ac7015ac28d33cee6a45b7398", "9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86"]
 yapf = ["02ace10a00fa2e36c7ebd1df2ead91dbfbd7989686dc4ccbdc549e95d19f5780", "6f94b6a176a7c114cfa6bad86d40f259bbe0f10cf2fa7f2f4b3596fc5802a41b"]
 zipp = ["3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e", "f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"]

@@ -1,0 +1,4 @@
+[nemcore]
+CACHE_DIR='D:\'
+DATA_DIR='D:\'
+CACHE_EXPIRE=600
