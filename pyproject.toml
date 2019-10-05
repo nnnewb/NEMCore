@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nemcore"
-version = "0.1.2"
+version = "0.1.3"
 description = "NetEase Cloud Music ApiClient extracted from NetEase-MusicBox"
 authors = ["weak_ptr <weak_ptr@163.com>"]
 license = 'MIT'

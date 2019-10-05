@@ -16,3 +16,7 @@
 - [ ] 支持异步(考虑`aiohttp`)
 
 ## changelog
+
+### 0.1.3
+
+- 支持缓存。基于`pickle`和`cachetools`实现，可配置缓存时间和是否持久化
