@@ -1,10 +1,24 @@
 # NetEase Cloud Music ApiClient
 
+<!-- badges -->
+
+![python-version](https://img.shields.io/pypi/pyversions/nemcore)
+![pypi-version](https://img.shields.io/pypi/v/nemcore)
+![github-issues](https://img.shields.io/github/issues-raw/nnnewb/nemcore)
+![license](https://img.shields.io/github/license/nnnewb/nemcore)
+![downloads](https://img.shields.io/pypi/dd/nemcore)
+
+<!-- badges/ -->
+
 网易云音乐核心 API 客户端。
 
 这个项目的目的是抽离一个干净的 API Client，便于二次开发和维护。
 
 主要代码来自[NetEase-MusicBox](https://github.com/darknessomi/musicbox/)，非常感谢每一位该项目的贡献者。
+
+**警告，目前 API 尚未稳定，不保证兼容性。万一有新点子说不定就会改。**
+
+此外欢迎 code review 和 pull request。
 
 ## 使用方法
 
