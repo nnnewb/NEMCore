@@ -6,6 +6,28 @@
 
 主要代码来自[NetEase-MusicBox](https://github.com/darknessomi/musicbox/)，非常感谢每一位该项目的贡献者。
 
+## 使用方法
+
+### quickstart
+
+```python
+from nemcore.netease import NetEase
+
+netease = NetEase()
+netease.login('mail@163.com', 'password')
+
+# 获取我的歌单
+playlists = netease.get_user_playlist()
+
+# 获取日推
+recommend = netease.get_recommend_songs()
+
+# 签到
+netease.daily_task()
+```
+
+其他 API 文档待补充。
+
 ## v1.0 开发计划
 
 - [x] 添加测试用例
