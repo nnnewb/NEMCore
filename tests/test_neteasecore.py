@@ -13,6 +13,7 @@ def test_version():
 
 
 @pytest.mark.use_fixtures('cleanup_persistent')
+@pytest.mark.skip('登录接口很容易触发ip频繁的问题，不进行自动测试')
 def test_00_login(username, password):
     log.debug(NetEase().login(username, password))
 

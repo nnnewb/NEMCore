@@ -8,7 +8,6 @@ from http.cookiejar import LWPCookieJar
 from os.path import join as joinpath
 
 import requests
-from cachetools import TTLCache, cached
 
 from nemcore import const as c
 from nemcore.conf import Config
@@ -16,6 +15,7 @@ from nemcore.encrypt import encrypted_request
 from nemcore.parser import Parse
 from nemcore.storage import Storage
 from nemcore.utils import make_cookie, raise_for_code
+from nemcore.utils.cache import cache_fn
 
 log = logging.getLogger(__name__)
 
@@ -56,8 +56,14 @@ class NetEase(object):
 
         self._set_base_cookies()
 
-        self.ttl_cache = TTLCache(100, config['CACHE_TTL'])
-        self.request = cached(self.ttl_cache)(self.request)
+        # cache setup
+        ttl = self.config['CACHE_TTL']
+        if self.config['CACHE_TYPE'] == 'persistent':
+            cache_filepath = joinpath(self.config['CACHE_DIR'], 'nem-cache')
+            self.request_cache, self.request = cache_fn(
+                self.request, ttl, filepath=cache_filepath)
+        else:
+            self.request_cache, self.request = cache_fn(self.request, ttl)
 
     def _set_base_cookies(self):
         """ 设置基础cookie
@@ -72,16 +78,6 @@ class NetEase(object):
         for name, value in c.BASE_COOKIES.items():
             cookie = make_cookie(name, value)
             self.session.cookies.set_cookie(cookie)
-
-    def logout(self):
-        """ 登出
-
-        清除所有cookie和storage里的用户信息
-        """
-        self.storage.logout()
-        self.session.cookies.clear()
-        self._set_base_cookies()
-        self.session.cookies.save()
 
     def _raw_request(self, method, endpoint, data=None):
         if method == 'GET':
@@ -134,12 +130,18 @@ class NetEase(object):
         try:
             resp = self._raw_request(method, endpoint, params)
             data = resp.json()
-        except ValueError as e:  # noqa: F841
+        except (json.JSONDecodeError, ValueError) as e:  # noqa: F841
             log.error('response:\n{}'.format(path, resp.text[:200]))
-            raise
+            data['message'] = 'unable to decode response'
+            return data
 
         raise_for_code(data)
         return data
+
+    def clear_cache(self):
+        """ 清除所有请求缓存
+        """
+        self.request_cache.clear()
 
     def login(self, username: str, password: str):
         """ 登录网易云音乐账号
@@ -182,6 +184,16 @@ class NetEase(object):
 
         return data
 
+    def logout(self):
+        """ 登出
+
+        清除所有cookie和storage里的用户信息
+        """
+        self.storage.logout()
+        self.session.cookies.clear()
+        self._set_base_cookies()
+        self.session.cookies.save()
+
     def get_login_status(self) -> dict:
         """ 检查登录状态
 
@@ -221,13 +233,15 @@ class NetEase(object):
     def login_refresh(self):
         """ 刷新登录状态
 
-        :return: 成功返回{'code': 200}，反之抛出异常
+        :return: 不返回
         """
-        data = self.request('GET', '/weapi/login/token/refresh')
-        if data['code'] == -1:
-            # 已知这个API会返回空的body，发现错误码是默认值-1时改成200
-            data['code'] = 200
-        return data
+        method = 'GET'
+        url = c.BASE_URL + '/weapi/login/token/refresh'
+        resp = self._raw_request(method, url, {})
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError as e:
+            raise_for_code({'code': -1, 'message': str(e)}, method, url)
 
     def daily_task(self, is_mobile=True):
         """ 每日签到

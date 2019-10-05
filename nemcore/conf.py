@@ -10,6 +10,7 @@ class Config(UserDict):
         'DATA_DIR': Path.home() / '.netease-musicbox',
         'CACHE_DIR': Path.home() / '.netease-musicbox',
         'CACHE_TTL': 600,
+        'CACHE_TYPE': 'transient',
     }
 
     def __init__(self):
@@ -37,6 +38,8 @@ class Config(UserDict):
             getenv('NEM_CACHE_DIR', self.data['CACHE_DIR']),
             'CACHE_TTL':
             getenv('NEM_CACHE_TTL', self.data['CACHE_TTL']),
+            'CACHE_TYPE':
+            getenv('NEM_CACHE_TYPE', self.data['CACHE_TYPE']),
         })
 
     def from_file(self, path):

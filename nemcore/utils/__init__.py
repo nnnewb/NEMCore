@@ -36,7 +36,7 @@ def raise_for_code(response_data, method=None, url=None):
         )
 
 
-def make_cookie(self, key, value):
+def make_cookie(key, value):
     """ 从键值对构造 cookie 对象
     """
     return Cookie(version=0,
