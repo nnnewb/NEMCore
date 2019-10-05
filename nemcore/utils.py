@@ -1,4 +1,5 @@
 import random
+from http.cookiejar import Cookie
 from string import ascii_letters, ascii_lowercase, digits
 from time import time
 
@@ -33,3 +34,24 @@ def raise_for_code(response_data, method=None, url=None):
             method=method,
             url=url,
         )
+
+
+def make_cookie(self, key, value):
+    """ 从键值对构造 cookie 对象
+    """
+    return Cookie(version=0,
+                  name=key,
+                  value=value,
+                  port=None,
+                  port_specified=False,
+                  domain="music.163.com",
+                  domain_specified=True,
+                  domain_initial_dot=False,
+                  path="/",
+                  path_specified=True,
+                  secure=False,
+                  expires=None,
+                  discard=False,
+                  comment=None,
+                  comment_url=None,
+                  rest={})

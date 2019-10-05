@@ -4,18 +4,18 @@ import platform
 import re
 import time
 from hashlib import md5
-from http.cookiejar import Cookie, LWPCookieJar
+from http.cookiejar import LWPCookieJar
 from os.path import join as joinpath
 
 import requests
-from cachetools import cached, TTLCache
+from cachetools import TTLCache, cached
 
 from nemcore import const as c
 from nemcore.conf import Config
 from nemcore.encrypt import encrypted_request
 from nemcore.parser import Parse
 from nemcore.storage import Storage
-from nemcore.utils import raise_for_code
+from nemcore.utils import make_cookie, raise_for_code
 
 log = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class NetEase(object):
         - [参考代码](https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580)
         """
         for name, value in c.BASE_COOKIES.items():
-            cookie = self.make_cookie(name, value)
+            cookie = make_cookie(name, value)
             self.session.cookies.set_cookie(cookie)
 
     def logout(self):
@@ -96,31 +96,18 @@ class NetEase(object):
                                      timeout=c.DEFAULT_TIMEOUT)
         return resp
 
-    # 生成Cookie对象
-    def make_cookie(self, name, value):
-        return Cookie(version=0,
-                      name=name,
-                      value=value,
-                      port=None,
-                      port_specified=False,
-                      domain="music.163.com",
-                      domain_specified=True,
-                      domain_initial_dot=False,
-                      path="/",
-                      path_specified=True,
-                      secure=False,
-                      expires=None,
-                      discard=False,
-                      comment=None,
-                      comment_url=None,
-                      rest={})
-
     def request(self,
                 method,
                 path,
                 params=None,
                 default=None,
                 custom_cookies=None):
+        """ 使用 requests 发送实际请求
+
+        NOTE: 在 __init__ 里对这个函数做了缓存 `request = cached(ttl_cache)(request)`
+
+        使用时请注意。
+        """
         if not params:
             params = {}
 
@@ -140,7 +127,7 @@ class NetEase(object):
         data = default
 
         for key, value in custom_cookies.items():
-            cookie = self.make_cookie(key, value)
+            cookie = make_cookie(key, value)
             self.session.cookies.set_cookie(cookie)
 
         params = encrypted_request(params)

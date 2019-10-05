@@ -27,6 +27,8 @@ class Config(UserDict):
             缓存目录，缓存api请求结果，防止出现ip访问过于频繁的错误。
         - `NEM_CACHE_TTL`
             缓存有效时长，单位秒
+        - `NEM_CACHE_TYPE`
+            缓存类型，支持`persistent`和`transient`
         """
         self.data.update({
             'DATA_DIR':
