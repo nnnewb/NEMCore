@@ -42,13 +42,6 @@ class TTLCacheP(TTLCache):
         self.save()
 
 
-def flatten_dict(value):
-    if isinstance(value, typing.Mapping):
-        return [(k, flatten_dict(v)) for k, v in value.items()]
-    else:
-        return value
-
-
 def cache_key(*args, **kwargs):
     return pickle.dumps({'args': args, 'kwargs': kwargs})
 
