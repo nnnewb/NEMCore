@@ -12,9 +12,9 @@ import requests
 from nemcore import const as c
 from nemcore.conf import Config
 from nemcore.encrypt import encrypted_request
-from nemcore.exceptions import api_wrapper
 from nemcore.parser import Parse
 from nemcore.storage import Storage
+from nemcore.utils import api_wrapper
 
 log = logging.getLogger(__name__)
 
