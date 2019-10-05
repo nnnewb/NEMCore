@@ -9,7 +9,7 @@ class Config(UserDict):
     defaults = {
         'DATA_DIR': Path.home() / '.netease-musicbox',
         'CACHE_DIR': Path.home() / '.netease-musicbox',
-        'CACHE_EXPIRE': 600,
+        'CACHE_TTL': 600,
     }
 
     def __init__(self):
@@ -25,7 +25,7 @@ class Config(UserDict):
             数据目录，保存登录状态、cookie、用户信息、等不需要频繁更新的数据。
         - `NEM_CACHE_DIR`
             缓存目录，缓存api请求结果，防止出现ip访问过于频繁的错误。
-        - `NEM_CACHE_EXPIRE`
+        - `NEM_CACHE_TTL`
             缓存有效时长，单位秒
         """
         self.data.update({
@@ -33,8 +33,8 @@ class Config(UserDict):
             getenv('NEM_DATA_DIR', self.data['DATA_DIR']),
             'CACHE_DIR':
             getenv('NEM_CACHE_DIR', self.data['CACHE_DIR']),
-            'CACHE_EXPIRE':
-            getenv('NEM_CACHE_EXPIRE', self.data['CACHE_EXPIRE']),
+            'CACHE_TTL':
+            getenv('NEM_CACHE_TTL', self.data['CACHE_TTL']),
         })
 
     def from_file(self, path):
