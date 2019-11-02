@@ -34,6 +34,8 @@ isort = "^4.3"
 pytest-cov = "^2.7"
 pytest-dotenv = "^0.4.0"
 pytest-mock = "^1.11"
+sphinx = "^2.2"
+doc8 = "^0.8.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
