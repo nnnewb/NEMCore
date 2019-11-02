@@ -56,6 +56,22 @@ netease.daily_task()
 
 ## changelog
 
+### 0.1.4
+
+本版本主要是对代码进行重构，将核心 Api 类清晰化，解耦无关逻辑，简化了使用。
+
+此外，提供了比较详细的入门文档，帮助使用者快速了解使用方式和 api 的响应内容。
+
+不过 api 文档不是很好，需要改进。
+
+- `nemcore.netease` 模块重命名成 `nemcore.api`
+- `nemcore.netease.NetEase` 重命名成 `nemcore.api.NetEaseApi`
+- 删除 `nemcore.conf` 模块
+- 删除 `nemcore.storage` 模块
+- 删除 `nemcore.parser` 模块
+- 删除 `nemcore.pdict` 模块
+- 添加 sphinx 文档和快速开始指引，文档已经挂到了 readthedocs.io
+
 ### 0.1.3
 
 - 支持缓存。基于`pickle`和`cachetools`实现，可配置缓存时间和是否持久化
