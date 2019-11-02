@@ -9,7 +9,7 @@ log = getLogger('nemcore-test')
 
 
 def test_version():
-    assert __version__ == '0.1.3'
+    assert __version__ == '0.1.4'
 
 
 @pytest.mark.skip('需要登录')
