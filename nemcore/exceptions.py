@@ -8,7 +8,7 @@ class NetEaseError(Exception):
         self.method = None
 
     def __str__(self):
-        return self.message
+        return self.message or self.__repr__()
 
     def __repr__(self):
         if self.method and self.url:
