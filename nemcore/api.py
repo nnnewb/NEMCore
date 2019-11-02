@@ -2,6 +2,7 @@
 """
 import json
 import logging
+import os
 import platform
 import re
 from hashlib import md5
@@ -44,6 +45,9 @@ class NetEaseApi(object):
         self.session = requests.Session()
         jar = LWPCookieJar(cookie_path) if cookie_path else CookieJar()
         self.session.cookies = jar
+
+        if isinstance(jar, LWPCookieJar) and os.path.isfile(cookie_path):
+            jar.load()
 
         for cookie in self.session.cookies:
             if cookie.is_expired():
