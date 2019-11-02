@@ -56,6 +56,10 @@ class NetEaseApi(object):
                 break
 
         self._set_base_cookies()
+
+        if isinstance(self.session.cookies, LWPCookieJar):
+            self.session.cookies.save()
+
         self.setup_cache(fpath=cache_path)
 
         # login status
@@ -187,7 +191,9 @@ class NetEaseApi(object):
         """
         username = username.strip()
         password = md5(password.encode('utf-8')).hexdigest()
-        self.session.cookies.load()
+
+        if isinstance(self.session.cookies, LWPCookieJar):
+            self.session.cookies.load()
 
         if username.isdigit():
             path = '/weapi/login/cellphone'
@@ -321,7 +327,7 @@ class NetEaseApi(object):
                             limit: int = 20):
         """ 获得每日推荐歌曲
         """
-        path = '/weapi/v1/discovery/recommend/songs'  # NOQA
+        path = '/weapi/v1/discovery/recommend/songs'
         params = dict(total='true' if total else 'false',
                       offset=offset,
                       limit=limit,
