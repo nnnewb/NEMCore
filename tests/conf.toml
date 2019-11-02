@@ -1,5 +1,0 @@
-[nemcore]
-CACHE_DIR='D:\'
-DATA_DIR='D:\'
-CACHE_TTL=600
-CACHE_TYPE="transient"

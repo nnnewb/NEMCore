@@ -1,11 +1,9 @@
 import pytest
 
-from nemcore.netease import NetEase
-from nemcore.conf import Config
+from nemcore.api import NetEaseApi
 
 from logging import getLogger
 import os
-from os.path import join as joinpath
 
 log = getLogger('nemcore-test')
 log.setLevel('DEBUG')
@@ -13,10 +11,8 @@ log.setLevel('DEBUG')
 
 @pytest.fixture()
 def netease(mocker):
-    config = Config()
-    config['CACHE_TTL'] = 99999999
-    config['CACHE_TYPE'] = 'persistent'
-    netease = NetEase(config)
+    netease = NetEaseApi()
+    netease.setup_cache()
     mocker.patch.object(netease,
                         '_raw_request',
                         autospec=True,
@@ -24,14 +20,8 @@ def netease(mocker):
 
     yield netease
 
-    try:
-        os.remove(joinpath(config['CACHE_DIR'], 'nem-cache'))
-    except (FileNotFoundError, OSError) as e:
-        log.info(e)
 
-
-@pytest.mark.use_fixtures('cleanup_persistent')
-@pytest.mark.skip('登录接口很容易触发ip频繁的问题，不进行自动测试')
+@pytest.mark.skip('需要登录')
 def test_00_login(username, password):
     log.debug(netease.login(username, password))
 
@@ -50,6 +40,7 @@ def test_02_login_refresh(netease):
     assert netease._raw_request.call_count == 2
 
 
+@pytest.mark.skip('需要登陆')
 def test_03_get_user_playlist(netease):
     log.debug(netease.get_user_playlist())
     log.debug(netease.get_user_playlist())
@@ -57,6 +48,7 @@ def test_03_get_user_playlist(netease):
     assert netease._raw_request.call_count == 1
 
 
+@pytest.mark.skip('需要登陆')
 def test_04_get_recommend_resource(netease):
     log.debug(netease.get_recommend_resource())
     log.debug(netease.get_recommend_resource())
@@ -64,6 +56,7 @@ def test_04_get_recommend_resource(netease):
     assert netease._raw_request.call_count == 1
 
 
+@pytest.mark.skip('需要登陆')
 def test_05_get_recommend_songs(netease):
     log.debug(netease.get_recommend_songs())
     log.debug(netease.get_recommend_songs())
@@ -218,12 +211,13 @@ def test_24_get_djprograms(netease):
     assert netease._raw_request.call_count == 2
 
 
+@pytest.mark.skip('需要登录')
 def test_97_persistent_cache(netease, mocker):
     netease.get_user_playlist()
     assert os.path.exists(netease.request_cache.filepath)
     assert os.lstat(netease.request_cache.filepath).st_size > 0
 
-    other = NetEase(netease.config)
+    other = NetEaseApi(netease.config)
     mocker.patch.object(other, '_raw_request', side_effect=other._raw_request)
     other.get_user_playlist()
 

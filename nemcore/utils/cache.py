@@ -1,6 +1,5 @@
 import pickle
 import logging
-import typing
 
 from cachetools import Cache, TTLCache, cached
 from cachetools.ttl import default_timer
@@ -8,6 +7,10 @@ from filelock import FileLock
 
 
 class TTLCacheP(TTLCache):
+    """ 基于 cachetools.TTLCache 实现的自动持久化 TTLCache
+
+    持久化采用pickle实现。
+    """
     def __init__(self,
                  maxsize,
                  ttl,
@@ -43,6 +46,8 @@ class TTLCacheP(TTLCache):
 
 
 def cache_key(*args, **kwargs):
+    """ 为了兼容 dict 参数实现的基于pickle的通用参数hash。
+    """
     return pickle.dumps({'args': args, 'kwargs': kwargs})
 
 
