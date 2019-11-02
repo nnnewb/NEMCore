@@ -19,8 +19,6 @@ import sys
 sys.path.insert(0, abspath(realpath(joinpath(dirname(__file__), '..', '..'))))
 sys.path.insert(0, abspath('.'))
 
-print(sys.path)
-
 # -- Project information -----------------------------------------------------
 
 project = 'nemcore'
