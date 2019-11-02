@@ -4,6 +4,7 @@
 
 ![python-version](https://img.shields.io/pypi/pyversions/nemcore)
 ![pypi-version](https://img.shields.io/pypi/v/nemcore)
+[![Documentation Status](https://readthedocs.org/projects/nemcore/badge/?version=latest)](https://nemcore.readthedocs.io/en/latest/?badge=latest)
 ![github-issues](https://img.shields.io/github/issues-raw/nnnewb/nemcore)
 ![license](https://img.shields.io/github/license/nnnewb/nemcore)
 ![downloads](https://img.shields.io/pypi/dd/nemcore)
