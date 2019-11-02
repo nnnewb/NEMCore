@@ -26,10 +26,10 @@
 ### quickstart
 
 ```python
-from nemcore.netease import NetEase
+from nemcore.api import NetEaseApi
 
-netease = NetEase()
-netease.login('mail@163.com', 'password')
+netease = NetEaseApi(cookie_path='./cookies')
+netease.login('cloudmusic@163.com', 'password')
 
 # 获取我的歌单
 playlists = netease.get_user_playlist()
@@ -41,7 +41,7 @@ recommend = netease.get_recommend_songs()
 netease.daily_task()
 ```
 
-其他 API 文档待补充。
+详细的 api 文档和快速开始请参考[这里](https://nemcore.readthedocs.io/en/latest/)。
 
 ## v1.0 开发计划
 
@@ -49,8 +49,9 @@ netease.daily_task()
 - [x] 规范命名和返回值结构
 - [x] 提供可配置的缓存(是否持久化，缓存有效时间等)
 - [x] 提供文档，挂在[readthedocs.io](https://nemcore.readthedocs.io/en/latest/)上。
+- [x] 重构简化 api 和实现。
 - [ ] 提供助手函数，实现一些常用操作
-- [ ] 移除 python2 支持(`__future__`等)，迁移到 python3.6+
+- [x] 移除 python2 支持(`__future__`等)，迁移到 python3.6+
 - [ ] 支持异步(考虑`aiohttp`)
 
 ## changelog
