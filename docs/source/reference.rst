@@ -1,17 +1,12 @@
 Reference
 ===========
 
-.. automodule:: nemcore.netease
+.. automodule:: nemcore.api
     :members:
     :undoc-members:
     :show-inheritance:
 
 .. automodule:: nemcore.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: nemcore.conf
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,21 +17,6 @@ Reference
     :show-inheritance:
 
 .. automodule:: nemcore.encrypt
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: nemcore.parser
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: nemcore.pdict
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: nemcore.storage
     :members:
     :undoc-members:
     :show-inheritance:
