@@ -126,3 +126,7 @@ dmypy.json
 
 # editor config
 .vscode
+
+# test generated
+.session-cache
+.session-cookies

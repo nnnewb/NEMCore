@@ -20,7 +20,8 @@
 
 使用 :meth:`nemcore.api.NetEaseApi.login` 接口登录。
 
-登录信息会保存在cookie中，如需保存登录状态，可以在初始化 :class:`nemcore.api.NetEaseApi` 实例时传入 ``cookie_path`` 参数。
+登录信息会保存在cookie中，如需保存登录状态，可以在初始化 :class:`nemcore.api.NetEaseApi`
+实例时传入 ``cookie_path`` 参数。
 
 下次初始化 :class:`nemcore.api.NetEaseApi` 实例时会自动加载登录状态。
 
@@ -34,7 +35,8 @@
 
 上面的例子代码应该输出你的用户id。
 
-如果登陆失败，上面的代码会抛出 :class:`nemcore.exceptions.NetEaseError` ，异常对象的``code``和``message``属性描述了错误的原因。
+如果登陆失败，上面的代码会抛出 :class:`nemcore.exceptions.NetEaseError` ，异常对象的
+``code`` 和 ``message`` 属性描述了错误的原因。
 
 你还可以从``box.profile``属性获得当前用户的更多信息。::
 
@@ -753,7 +755,7 @@
 搜索
 --------
 
-通过使用 :meth:`nemcore.api.NetEaseApi.search` 方法搜索歌曲，这个方法会返回一个歌曲清单。::
+通过使用 :meth:`nemcore.api.NetEaseApi.search` 方法搜索歌曲，这个方法会返回一个歌曲清单。
 
     from nemcore.api import NetEaseApi
     from pprint import pprint

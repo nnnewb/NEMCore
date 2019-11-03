@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "properties": {
+    "anonimousUser": {
+      "type": "boolean"
+    },
+    "ban": {
+      "type": "integer"
+    },
+    "baoyueVersion": {
+      "type": "integer"
+    },
+    "createTime": {
+      "type": "integer"
+    },
+    "donateVersion": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "salt": {
+      "type": "string"
+    },
+    "status": {
+      "type": "integer"
+    },
+    "tokenVersion": {
+      "type": "integer"
+    },
+    "type": {
+      "type": "integer"
+    },
+    "userName": {
+      "type": "string"
+    },
+    "vipType": {
+      "type": "integer"
+    },
+    "viptypeVersion": {
+      "type": "integer"
+    },
+    "whitelistAuthority": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "anonimousUser",
+    "ban",
+    "baoyueVersion",
+    "createTime",
+    "donateVersion",
+    "id",
+    "salt",
+    "status",
+    "tokenVersion",
+    "type",
+    "userName",
+    "vipType",
+    "viptypeVersion",
+    "whitelistAuthority"
+  ],
+  "type": "object"
+}

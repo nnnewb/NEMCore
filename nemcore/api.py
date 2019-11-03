@@ -16,20 +16,37 @@ from nemcore.encrypt import encrypted_request
 from nemcore.utils import make_cookie, raise_for_code
 from nemcore.utils.cache import cache_fn
 
-log = logging.getLogger(__name__)
-
 
 class NetEaseApi(object):
+    """ 网易云音乐api客户端
+
+    :ivar session: 当前会话的session，cookies从指定位置加载。如果没有指定cookie路径，会
+                   话初始化为新的未登录会话。
+    :ivar header: 当前网络请求携带的header，用于模拟浏览器行为。
+    :ivar logger: 日志记录器，如果初始化未传递 ``logger`` ，默认使用名为 ``NetEaseApi``
+                  的 ``Logger`` 。
+    :ivar profile: 当前登录用户的个人信息。
+    :ivar account: 当前登录用户的个人信息。
+
+    :param cookie_path: ``session.cookies`` 本地保存路径。如果不设置，则不会持久化 ``session.cookies``
+                        。
+    :param cache_path: 网络请求的本地缓存路径，如果不设置，则只在内存缓存。
+    :param cache_ttl: 请求缓存的保留时间。
+    :param logger: 日志记录器。
+
+    ``self.account`` 数据字典参考如下。
+
+    .. jsonschema:: ../docs/source/schemas/userinfo/account.json
+
+    ``self.profile`` 数据字典参考如下。
+
+    .. jsonschema:: ../docs/source/schemas/userinfo/account.json
+    """
     def __init__(self,
                  cookie_path: str = None,
                  cache_path: str = None,
-                 cache_ttl: int = 300):
-        """ 网易云音乐 HTTP Api 客户端
-
-        :param cookie_path: cookies 本地保存路径。如果不设置，则不会持久化cookies。
-        :param cache_path: 网络请求的本地缓存路径，如果不设置，则只在内存缓存。
-        :param cache_ttl: 请求缓存的保留时间。
-        """
+                 cache_ttl: int = 300,
+                 logger: logging.Logger = None):
         # yapf: disable
         self.header = {
             'Accept': '*/*',
@@ -45,6 +62,7 @@ class NetEaseApi(object):
         self.session = requests.Session()
         jar = LWPCookieJar(cookie_path) if cookie_path else CookieJar()
         self.session.cookies = jar
+        self.logger = logger or logging.getLogger('NetEaseApi')
 
         if isinstance(jar, LWPCookieJar) and os.path.isfile(cookie_path):
             jar.load()
@@ -64,6 +82,7 @@ class NetEaseApi(object):
 
         # login status
         self.profile = None
+        self.account = None
 
     def _set_base_cookies(self):
         """ 设置基础cookie
@@ -72,8 +91,11 @@ class NetEaseApi(object):
 
         reference:
 
-        - [Issue #745](https://github.com/darknessomi/musicbox/issues/745)
-        - [参考代码](https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580)
+        - `Issue #745`_
+        - `参考代码`_
+
+        .. _Issue #745: https://github.com/darknessomi/musicbox/issues/745
+        .. _参考代码: https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580
         """
         for name, value in c.BASE_COOKIES.items():
             cookie = make_cookie(name, value)
@@ -93,7 +115,7 @@ class NetEaseApi(object):
         return resp
 
     @property
-    def uid(self):
+    def uid(self) -> int:
         """ 用户的id
 
         未登录时为None
@@ -102,7 +124,7 @@ class NetEaseApi(object):
             return self.profile['userId']
         return None
 
-    def setup_cache(self, ttl=300, fpath=None):
+    def setup_cache(self, ttl: int = 300, fpath: str = None):
         """ 配置指定请求的缓存参数
 
         允许指定缓存文件位置和缓存的保留时间。
@@ -167,7 +189,7 @@ class NetEaseApi(object):
             resp = self._raw_request(method, endpoint, params)
             data = resp.json()
         except (json.JSONDecodeError, ValueError) as e:  # noqa: F841
-            log.error('response:\n{}'.format(path, resp.text[:200]))
+            self.logger.error('response:\n{}'.format(path, resp.text[:200]))
             data['message'] = 'unable to decode response'
             return data
 
@@ -217,6 +239,7 @@ class NetEaseApi(object):
         data = self.request('POST', path, params)
         if data.get('code', -1) == 200:
             self.profile = data['profile']
+            self.account = data['account']
 
         if isinstance(self.session.cookies, LWPCookieJar):
             self.session.cookies.save()
@@ -229,6 +252,7 @@ class NetEaseApi(object):
         清除所有cookie和storage里的用户信息
         """
         self.profile = None
+        self.account = None
         self.session.cookies.clear()
         self._set_base_cookies()
         self.session.cookies.save()
@@ -299,7 +323,26 @@ class NetEaseApi(object):
         """ 查看用户歌单
 
         :param uid: 用户ID,不传递时指自己的歌单
-        :return: 正常返回 {code:int,more:bool,playlist:[]}
+        :param offset: 分页选项，偏移值。
+        :param limit: 分页选项，一次获取的项目数限制。
+        :return: 正常返回字典
+
+        响应体包含下面的键
+
+        - code
+        - playlist
+        - more
+
+        playlist是一个对象列表，内容整理如下。
+
+        .. jsonschema:: ../docs/source/schemas/playlist/playlist.json
+
+        例子如下。
+
+        .. literalinclude:: examples/get_user_playlist.json
+            :language: json
+            :linenos:
+            :lines: -50
         """
         if not uid and not self.uid:
             raise ValueError('尚未登陆。')
@@ -314,9 +357,9 @@ class NetEaseApi(object):
     def get_recommend_resource(self):
         """ 获得日推歌单列表。
 
-        NOTE: 注意这个不是通常所说的日推，而是推荐的歌单列表，每日更新。
+        注意，这个不是日推。
 
-        NOTE: 日推请转到 `recommend_playlist`
+        日推请转到 :meth:`nemcore.api.NetEaseApi.get_recommend_songs`
         """
         path = '/weapi/v1/discovery/recommend/resource'
         return self.request('POST', path)
@@ -326,6 +369,28 @@ class NetEaseApi(object):
                             offset: int = 0,
                             limit: int = 20):
         """ 获得每日推荐歌曲
+
+        :param total: 未知。是否一次获取全部？
+        :param offset: 分页选项，偏移值。
+        :param limit: 分页选项，一次获取的项目数限制。
+        :return: 返回今日推荐歌曲清单
+
+        响应包含键
+
+        - code
+        - data
+            - dailySongs
+        
+        dailySongs内每个对象的结构如下。
+
+        .. jsonschema:: ../docs/source/schemas/daily-song.json
+
+        下面是一个响应的例子。
+
+        .. literalinclude:: examples/get_recommend_songs.json
+            :language: json
+            :linenos:
+            :lines: -50
         """
         path = '/weapi/v1/discovery/recommend/songs'
         params = dict(total='true' if total else 'false',
@@ -347,7 +412,10 @@ class NetEaseApi(object):
                 alg: str = 'itembased'):
         """ 私人FM操作：喜欢
 
-        NOTE: 这个 API 可能影响云音乐今后的日推和FM结果。
+        :param songid: 歌曲id
+        :param like: 喜欢或不喜欢
+        :param time: 未知
+        :param alg: 未知。fm推荐算法类型？
         """
         path = '/weapi/radio/like'
         params = dict(alg=alg,
@@ -360,6 +428,9 @@ class NetEaseApi(object):
         """ 私人FM操作：不喜欢
 
         NOTE: 这个API可能影响云音乐今后的日推和FM结果。
+        :param songid: 歌曲id
+        :param time: 未知
+        :param alg: 未知
         """
         path = '/weapi/radio/trash/add'
         params = dict(
@@ -567,6 +638,9 @@ class NetEaseApi(object):
         今日最热（0）, 本周最热（10），历史最热（20），最新节目（30）
 
         对应[首页>>发现音乐>>主播电台](https://music.163.com/#/discover/djradio)
+
+        :param offset: 分页选项，偏移值
+        :param limit: 分页选项，一次获取的项目数限制。
         """
         path = '/weapi/djradio/hot/v1'
         params = dict(limit=limit, offset=offset)
@@ -576,8 +650,14 @@ class NetEaseApi(object):
                        radio_id: int,
                        asc: bool = False,
                        offset: int = 0,
-                       limit: int = 50):
-        """ 电台节目清单
+                       limit: int = 50) -> Mapping:
+        """获取电台频道信息
+
+        :param radio_id: id
+        :param asc: 按升序排序, defaults to False
+        :param offset: 分页选项，偏移值, defaults to 0
+        :param limit: 分页选项，一次获取的项目数限制, defaults to 50
+        :return: 电台信息
         """
         path = '/weapi/dj/program/byradio'
         params = dict(asc=asc, radioId=radio_id, offset=offset, limit=limit)
