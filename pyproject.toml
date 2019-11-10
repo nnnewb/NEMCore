@@ -26,10 +26,10 @@ cachetools = "^3.1"
 filelock = "^3.0"
 sphinx = {version = "^2.2", extras = ["docs"]}
 doc8 = {version = "^0.8.0", extras = ["docs"]}
-genson = "^1.1"
 sphinx-jsonschema = {version = "^1.11", extras = ["docs"]}
 sphinx-autodoc-typehints = {version = "^1.9", extras = ["docs"]}
 insegel = {version = "^1.1", extras = ["docs"]}
+genson = {version = "^1.1", extras = ["docs"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

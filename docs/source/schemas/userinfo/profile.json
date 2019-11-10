@@ -140,8 +140,6 @@
       "type": "integer"
     }
   },
-  "required": [
-    "vipType"
-  ],
+  "required": ["vipType"],
   "type": "object"
 }
