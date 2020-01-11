@@ -7,7 +7,7 @@ import platform
 import re
 from hashlib import md5
 from http.cookiejar import CookieJar, LWPCookieJar
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, Union, Any, Dict
 
 import requests
 
@@ -15,6 +15,7 @@ from nemcore import const as c
 from nemcore.encrypt import encrypted_request
 from nemcore.utils import make_cookie, raise_for_code
 from nemcore.utils.cache import cache_fn
+from nemcore.utils.compatible import PathLike
 
 
 class NetEaseApi(object):
@@ -42,9 +43,10 @@ class NetEaseApi(object):
 
     .. jsonschema:: ../docs/source/schemas/userinfo/account.json
     """
+
     def __init__(self,
-                 cookie_path: str = None,
-                 cache_path: str = None,
+                 cookie_path: PathLike = None,
+                 cache_path: PathLike = None,
                  cache_ttl: int = 300,
                  logger: logging.Logger = None):
         # yapf: disable
@@ -56,7 +58,12 @@ class NetEaseApi(object):
             'Content-Type': 'application/x-www-form-urlencoded',
             'Host': 'music.163.com',
             'Referer': 'http://music.163.com',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',  # noqa: E501
+            'User-Agent': ' '.join([
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5)',
+                'AppleWebKit/537.36 (KHTML, like Gecko)',
+                'Chrome/59.0.3071.115 Safari/537.36',
+            ]),
+            # noqa: E501
         }
         # yapf: enable
         self.session = requests.Session()
@@ -78,7 +85,9 @@ class NetEaseApi(object):
         if isinstance(self.session.cookies, LWPCookieJar):
             self.session.cookies.save()
 
-        self.setup_cache(fpath=cache_path)
+        # cache
+        self.request_cache = None
+        self.setup_cache(ttl=cache_ttl, filename=cache_path)
 
         # login status
         self.profile = None
@@ -112,10 +121,12 @@ class NetEaseApi(object):
                                      data=data,
                                      headers=self.header,
                                      timeout=c.DEFAULT_TIMEOUT)
+        else:
+            raise ValueError('Unexpected request method.')
         return resp
 
     @property
-    def uid(self) -> int:
+    def uid(self) -> Union[int, None]:
         """ 用户的id
 
         未登录时为None
@@ -124,7 +135,7 @@ class NetEaseApi(object):
             return self.profile['userId']
         return None
 
-    def setup_cache(self, ttl: int = 300, fpath: str = None):
+    def setup_cache(self, ttl: int = 300, filename: str = None):
         """ 配置指定请求的缓存参数
 
         允许指定缓存文件位置和缓存的保留时间。
@@ -132,16 +143,17 @@ class NetEaseApi(object):
         NOTE: 通过monkey patch实现，替换了 :meth:`request` 的实现。
 
         :param ttl: 缓存时间，单位秒
-        :param fpath: 缓存文件位置，如果传入None则认为不持久化。
+        :param filename: 缓存文件位置，如果传入None则认为不持久化。
         :return:
         """
         # cache setup
-        if fpath:
-            self.request_cache, self.request = cache_fn(self.request,
-                                                        ttl,
-                                                        filepath=fpath)
+        if filename:
+            request_cache, request = cache_fn(self.request, ttl, filepath=filename)
         else:
-            self.request_cache, self.request = cache_fn(self.request, ttl)
+            request_cache, request = cache_fn(self.request, ttl)
+
+        setattr(self, 'request_cache', request_cache)
+        setattr(self, 'request', request)
 
     def request(self,
                 method: str,
@@ -178,7 +190,7 @@ class NetEaseApi(object):
                 csrf_token = cookie.value
                 break
         params.update({'csrf_token': csrf_token})
-        data = default
+        data: Dict[Any, Any] = default.copy()
 
         for key, value in custom_cookies.items():
             cookie = make_cookie(key, value)
@@ -188,10 +200,8 @@ class NetEaseApi(object):
         try:
             resp = self._raw_request(method, endpoint, params)
             data = resp.json()
-        except (json.JSONDecodeError, ValueError) as e:  # noqa: F841
-            self.logger.error('response:\n{}'.format(path, resp.text[:200]))
+        except json.JSONDecodeError:
             data['message'] = 'unable to decode response'
-            return data
 
         raise_for_code(data)
         return data
@@ -499,23 +509,27 @@ class NetEaseApi(object):
                       limit=limit)
         return self.request('POST', path, params)
 
-    def playlist_catelogs(self):
+    def playlist_catalogs(self):
         """ catalogs
         """
         path = '/weapi/playlist/catalogue'
         return self.request('POST', path)
 
-    def get_playlist_detail(self, playlist_id: int):
+    def get_playlist_detail(self, playlist_id: int, offset=0, limit=100):
         """ 歌单详情
 
+        :param limit: 用于分页
+        :param offset: 用于分页
         :param playlist_id: 歌单ID
         """
         path = '/weapi/v3/playlist/detail'
-        params = dict(id=playlist_id,
-                      total='true',
-                      limit=1000,
-                      n=1000,
-                      offest=0)
+        params = {
+            'id': playlist_id,
+            'total': 'true',
+            'limit': limit,
+            'n': 1000,
+            'offest': offset,
+        }
         # cookie添加os字段
         custom_cookies = dict(os=platform.system())
         return self.request('POST', path, params, {'code': -1}, custom_cookies)
@@ -542,7 +556,7 @@ class NetEaseApi(object):
         :param limit: 结果集大小，和offset结合做分页
         """
         playlist_id = c.TOP_LIST_ALL[idx][1]
-        return self.get_playlist_detail(playlist_id)
+        return self.get_playlist_detail(playlist_id, offset=offset, limit=limit)
 
     def get_artist_info(self, artist_id: int):
         """ 获取歌手信息
