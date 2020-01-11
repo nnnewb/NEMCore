@@ -1,8 +1,8 @@
-import pickle
 import logging
+import pickle
+import time
 
 from cachetools import Cache, TTLCache, cached
-from cachetools.ttl import default_timer
 from filelock import FileLock
 
 
@@ -11,11 +11,12 @@ class TTLCacheP(TTLCache):
 
     持久化采用pickle实现。
     """
+
     def __init__(self,
                  maxsize,
                  ttl,
                  filepath,
-                 timer=default_timer,
+                 timer=time.monotonic,
                  getsizeof=None):
         super().__init__(maxsize, ttl, timer=timer, getsizeof=getsizeof)
         self.filepath = filepath

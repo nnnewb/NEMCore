@@ -111,8 +111,8 @@ def test_11_get_top_playlists(netease):
 
 
 def test_12_catalogs(netease):
-    log.debug(netease.playlist_catelogs())
-    log.debug(netease.playlist_catelogs())
+    log.debug(netease.playlist_catalogs())
+    log.debug(netease.playlist_catalogs())
 
     assert netease._raw_request.call_count == 1
 

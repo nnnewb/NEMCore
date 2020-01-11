@@ -9,7 +9,7 @@ log = getLogger('nemcore-test')
 
 
 def test_version():
-    assert __version__ == '0.1.4'
+    assert __version__ == '0.1.5'
 
 
 @pytest.mark.skip('需要登录')
@@ -71,7 +71,7 @@ def test_11_get_top_playlists():
 
 
 def test_12_catalogs():
-    log.debug(NetEaseApi().playlist_catelogs())
+    log.debug(NetEaseApi().playlist_catalogs())
 
 
 def test_13_playlist_detail():

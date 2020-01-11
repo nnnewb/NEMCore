@@ -16,7 +16,7 @@ def password():
 
 
 @fixture(scope='session')
-def neteaseapi():
+def api():
     yield NetEaseApi(
         cookie_path='.session-cookies',
         cache_path='.session-cache',

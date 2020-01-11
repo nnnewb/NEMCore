@@ -5,6 +5,7 @@ import binascii
 import hashlib
 import json
 import os
+from typing import Dict, Union
 
 from Cryptodome.Cipher import AES
 
@@ -33,13 +34,12 @@ def encrypted_id(id):
 
 
 # 登录加密算法, 基于https://github.com/stkevintan/nw_musicbox
-def encrypted_request(text):
-    # type: (str) -> dict
+def encrypted_request(text: Union[Dict, str, int, float]):
     data = json.dumps(text).encode('utf-8')
     secret = create_key(16)
     params = aes(aes(data, NONCE), secret)
-    encseckey = rsa(secret, PUBKEY, MODULUS)
-    return {'params': params, 'encSecKey': encseckey}
+    encrypt_secret_key = rsa(secret, PUBKEY, MODULUS)
+    return {'params': params, 'encSecKey': encrypt_secret_key}
 
 
 def aes(text, key):
