@@ -56,6 +56,19 @@ netease.daily_task()
 
 ## changelog
 
+### 0.1.5
+
+本版本主要修复影响运行的问题，把包构建从`poetry`改为`setuptools`。
+
+在`poetry`可用性足够之前不会用它了。
+
+- 修复 `from cachetools.ttl import default_timer` 失败的问题
+- 从`poetry`迁移到`setuptools`
+
+有一些已知的问题如下。
+
+- `login` 会抛出错误代码 `501`，暂时没找到好办法处理。
+
 ### 0.1.4
 
 本版本主要是对代码进行重构，将核心 Api 类清晰化，解耦无关逻辑，简化了使用。
