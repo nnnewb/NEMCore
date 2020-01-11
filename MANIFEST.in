@@ -1,0 +1,5 @@
+include README.md LICENSE setup.cfg
+recursive-include nemcore *.py
+recursive-include tests *.py
+recursive-include requirements *.txt
+recursive-include docs *.py *.rst *.bat Makefile *.json *.png

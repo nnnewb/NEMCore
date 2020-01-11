@@ -1,0 +1,5 @@
+requests>=2.22.0
+pycryptodome>=3.9
+pycryptodomex>=3.9
+cachetools>=4.0
+filelock>=3.0
