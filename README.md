@@ -1,15 +1,11 @@
 # NetEase Cloud Music ApiClient
 
-<!-- badges -->
-
 ![python-version](https://img.shields.io/pypi/pyversions/nemcore)
 ![pypi-version](https://img.shields.io/pypi/v/nemcore)
 [![Documentation Status](https://readthedocs.org/projects/nemcore/badge/?version=latest)](https://nemcore.readthedocs.io/en/latest/?badge=latest)
 ![github-issues](https://img.shields.io/github/issues-raw/nnnewb/nemcore)
 ![license](https://img.shields.io/github/license/nnnewb/nemcore)
 ![downloads](https://img.shields.io/pypi/dd/nemcore)
-
-<!-- badges/ -->
 
 网易云音乐核心 API 客户端。
 
@@ -21,7 +17,27 @@
 
 此外欢迎 code review 和 pull request。
 
-## 使用方法
+## 安装
+
+使用 pip 安装
+
+```shell script
+pip install NEMCore
+```
+
+文档生成需要额外依赖项
+
+```shell script
+pip install NEMCore[docs]
+```
+
+单元测试需要额外依赖
+
+```shell script
+pip install NEMCore[test]
+```
+
+## 使用
 
 ### quickstart
 
