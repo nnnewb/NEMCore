@@ -14,7 +14,7 @@ def requirements(filename):
 
 setup(
     name='NEMCore',
-    version='0.1.5',
+    version='0.1.6',
     author='weak_ptr',
     author_email='weak_ptr@outlook.com',
     description='NetEase Cloud Music API wrapper',

@@ -72,6 +72,10 @@ netease.daily_task()
 
 ## changelog
 
+### 0.1.6
+
+- 修复 `login` 接口登录失败错误
+
 ### 0.1.5
 
 本版本主要修复影响运行的问题，把包构建从`poetry`改为`setuptools`。
