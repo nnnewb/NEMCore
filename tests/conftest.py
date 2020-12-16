@@ -5,14 +5,14 @@ from nemcore.api import NetEaseApi
 
 @fixture()
 def username():
-    assert 'username' in environ, 'Set environment variable "username" before start testing.'
-    return environ['username']
+    assert 'NEMCORE_USERNAME' in environ, 'Set environment variable "username" before start testing.'
+    return environ['NEMCORE_USERNAME']
 
 
 @fixture()
 def password():
-    assert 'password' in environ, 'Set environment variable "password" before start testing.'
-    return environ['password']
+    assert 'NEMCORE_PASSWORD' in environ, 'Set environment variable "password" before start testing.'
+    return environ['NEMCORE_PASSWORD']
 
 
 @fixture(scope='session')
