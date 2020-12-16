@@ -211,7 +211,7 @@ class NetEaseApi(object):
         """
         self.request_cache.clear()
 
-    def login(self, username: str, password: str):
+    def login(self, username: str, password: str, country_code: str = '86'):
         """ 登录网易云音乐账号
 
         支持邮箱登录和手机号码登录，cookies 会自动持久化到 ~/.netease-musicbox/cookies
@@ -232,6 +232,7 @@ class NetEaseApi(object):
             params = dict(
                 phone=username,
                 password=password,
+                country_code=country_code,
                 rememberLogin='true',
             )
         else:
@@ -242,6 +243,7 @@ class NetEaseApi(object):
             params = dict(
                 username=username,
                 password=password,
+                country_code=country_code,
                 rememberLogin='true',
                 clientToken=client_token,
             )
