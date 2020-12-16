@@ -248,7 +248,7 @@ class NetEaseApi(object):
                 clientToken=client_token,
             )
 
-        data = self.request('POST', path, params)
+        data = self.request('POST', path, params, custom_cookies={'os': 'pc'})
         if data.get('code', -1) == 200:
             self.profile = data['profile']
             self.account = data['account']
