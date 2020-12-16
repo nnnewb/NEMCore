@@ -232,7 +232,7 @@ class NetEaseApi(object):
             params = dict(
                 phone=username,
                 password=password,
-                country_code=country_code,
+                countrycode=country_code,
                 rememberLogin='true',
             )
         else:
@@ -243,7 +243,7 @@ class NetEaseApi(object):
             params = dict(
                 username=username,
                 password=password,
-                country_code=country_code,
+                countrycode=country_code,
                 rememberLogin='true',
                 clientToken=client_token,
             )
