@@ -1,4 +1,2 @@
-sphinx>=2.3
-sphinx-jsonschema>=1.12
-sphinx-autodoc-typehints>=1.10
-groundwork-sphinx-theme>=1.1
+mkdocs>=1.1.2
+mkdocs-material>=6.2.2

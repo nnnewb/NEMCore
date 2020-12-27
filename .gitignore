@@ -131,3 +131,5 @@ dmypy.json
 # test generated
 .session-cache
 .session-cookies
+cookies
+.cookies
