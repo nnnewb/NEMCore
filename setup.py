@@ -21,7 +21,7 @@ setup(
     long_description=README,
     long_description_content_type='text/markdown',
     install_requires=requirements('requirements/requirements.txt'),
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests', 'demo')),
     extras_require={
         'demo': requirements('requirements/demo.txt'),
         'lint': requirements('requirements/lint.txt'),
