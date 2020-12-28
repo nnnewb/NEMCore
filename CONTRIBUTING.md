@@ -9,14 +9,13 @@
 
 ## 规范/约定
 
-1. 项目使用`poetry`管理依赖，请注意用`poetry add` 和`poetry add -D`添加依赖。
-2. commit message 没有强制要求，但最好使用 `commitizen` 一类的工具来生成规范的提交信息，每个提交有明确的主题。
+1. 项目使用`setuptools`管理依赖，暂不考虑 `pyproject.toml` ，除非 pip 支持完善或 poetry 等工具成为 python 默认分发的包管理工具。
+2. commit message 格式没有强制要求，但最好能符合一般格式，每个 commit 有明确的主题，便于 review。
    如果提交的代码很多又没有明确的 commit message 可能会被拒绝合并。
-3. 注意提交前使用`flake8`和`isort`检查代码是否存在未解决的问题。提示警告的地方应处理或显式注明 noqa，注释说明原因。
-   `flake8`使用的插件:`flake8-bugbear`。使用`isort -rc -c nemcore`来检查`import`语句的顺序和格式。配置文件在项目根目录下可以找到。
-4. 提交前使用`yapf`格式化代码。如果`yapf`格式化出来的效果很差，用`yapf: disable`和`yapf: enable`来关闭指定代码块的格式化。
-5. 添加或修改 api 务必先确认单元测试没问题。
-6. 如果预期会有较大规模的代码改变或 breaking change 务必先提 issue 。
+3. 最好能自己做一下 flake8 或者 pylint 的检查。
+4. 推荐用 yapf 格式化一下代码再提交。
+5. 添加或修改 api 注意留个测试。
+6. 有 breaking change 或者比较多的修改可以先提个 issue 讨论下，避免做无用功。
 7. 不要提交 ide/编辑器的配置，如`.vscode`
 
-其他待补充。
+其他想到再说。
