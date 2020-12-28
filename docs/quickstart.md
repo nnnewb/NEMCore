@@ -1,14 +1,14 @@
 # 快速开始
 
-[nemcore](https://github.com/nnnewb/NEMCore) 是从
+[NEMCore](https://github.com/nnnewb/NEMCore) 是从
 [netease-musicbox](https://github.com/darknessomi/musicbox/)
-项目抽取的核心api模块，简化重构后的产物。
+项目抽取的核心 api 模块，简化重构后的产物。
 
-使用nemcore可以实现一个简单的网易云音乐播放器。
+使用 NEMCore 可以实现一个简单的网易云音乐播放器。
 
 ## 安装
 
-你可以使用pip安装。:
+你可以使用 pip 安装。:
 
 ```shell
 pip install nemcore
@@ -18,7 +18,7 @@ pip install nemcore
 
 使用 `nemcore.api.NetEaseApi.login` 接口登录。
 
-登录信息会保存在cookie中，如需保存登录状态，可以在初始化
+登录信息会保存在 cookie 中，如需保存登录状态，可以在初始化
 `nemcore.api.NetEaseApi` 实例时传入
 `cookie_path` 参数。
 
@@ -34,7 +34,7 @@ box.login('cloudmusic@163.com', 'password')
 print(box.uid)
 ```
 
-上面的例子代码应该输出你的用户id。
+上面的例子代码应该输出你的用户 id。
 
 如果登陆失败，上面的代码会抛出
 `nemcore.exceptions.NetEaseError` ，异常对象的 `code` 和 `message` 属性描述了错误的原因。
@@ -100,7 +100,7 @@ box.login('nemcore@163.com', 'password')
 box.logout()
 ```
 
-登出后，磁盘上持久化的登录cookie会立即清除。
+登出后，磁盘上持久化的登录 cookie 会立即清除。
 
 ## 收藏的歌单
 
@@ -272,9 +272,7 @@ print(resp)
             "alias": []
           }
         ],
-        "alia": [
-          "TV动画《战姬绝唱SYMPHOGEAR XV》片尾曲"
-        ],
+        "alia": ["TV动画《战姬绝唱SYMPHOGEAR XV》片尾曲"],
         "pop": 70.0,
         "st": 0,
         "rt": "",
@@ -431,7 +429,7 @@ box.search('战姬绝唱')
 
 结果不做演示
 
-## 下载mp3
+## 下载 mp3
 
 通过 `nemcore.api.NetEaseApi.get_songs_url` 来获取歌曲播放链接。:
 
