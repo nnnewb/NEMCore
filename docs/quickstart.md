@@ -10,17 +10,19 @@
 
 你可以使用pip安装。:
 
-    pip install nemcore
+```shell
+pip install nemcore
+```
 
 ## 登录
 
-使用 `nemcore.api.NetEaseApi.login`{.interpreted-text role="meth"} 接口登录。
+使用 `nemcore.api.NetEaseApi.login` 接口登录。
 
 登录信息会保存在cookie中，如需保存登录状态，可以在初始化
-`nemcore.api.NetEaseApi`{.interpreted-text role="class"} 实例时传入
+`nemcore.api.NetEaseApi` 实例时传入
 `cookie_path` 参数。
 
-下次初始化 `nemcore.api.NetEaseApi`{.interpreted-text role="class"} 实例时会自动加载登录状态。
+下次初始化 `nemcore.api.NetEaseApi` 实例时会自动加载登录状态。
 
 例子:
 
@@ -35,7 +37,7 @@ print(box.uid)
 上面的例子代码应该输出你的用户id。
 
 如果登陆失败，上面的代码会抛出
-`nemcore.exceptions.NetEaseError`{.interpreted-text role="class"} ，异常对象的 `code` 和 `message` 属性描述了错误的原因。
+`nemcore.exceptions.NetEaseError` ，异常对象的 `code` 和 `message` 属性描述了错误的原因。
 
 你还可以从`box.profile`属性获得当前用户的更多信息。:
 
@@ -88,7 +90,7 @@ box = NetEaseApi(cookie_path='./cookies')
 
 ## 登出
 
-如果需要登出，可以调用 `nemcore.api.NetEaseApi.logout`{.interpreted-text role="meth"}。:
+如果需要登出，可以调用 `nemcore.api.NetEaseApi.logout`。:
 
 ```python
 from nemcore.api import NetEaseApi
@@ -102,7 +104,7 @@ box.logout()
 
 ## 收藏的歌单
 
-通过 `nemcore.api.NetEaseApi.get_user_playlist`{.interpreted-text role="meth"} 来获取用户的歌单清单:
+通过 `nemcore.api.NetEaseApi.get_user_playlist` 来获取用户的歌单清单:
 
 ```python
 from nemcore.api import NetEaseApi
@@ -203,7 +205,7 @@ result = box.get_user_playlist()
 
 ## 歌单详情
 
-通过 `nemcore.api.NetEaseApi.get_playlist_detail`{.interpreted-text role="meth"} 获取歌单的详情。:
+通过 `nemcore.api.NetEaseApi.get_playlist_detail` 获取歌单的详情。:
 
 ```python
 from nemcore.api import NetEaseApi
@@ -401,7 +403,7 @@ print(resp)
 
 ## 日推歌单
 
-通过 `nemcore.api.NetEaseApi.get_recommend_songs`{.interpreted-text role="meth"} 获取你的今日推荐。
+通过 `nemcore.api.NetEaseApi.get_recommend_songs` 获取你的今日推荐。
 
 需要登录才能调用，否则会出现错误代码 `301`。
 
@@ -418,7 +420,7 @@ result = box.get_recommend_songs()
 
 ## 搜索
 
-通过使用 `nemcore.api.NetEaseApi.search`{.interpreted-text role="meth"} 方法搜索歌曲，这个方法会返回一个歌曲清单。
+通过使用 `nemcore.api.NetEaseApi.search` 方法搜索歌曲，这个方法会返回一个歌曲清单。
 
 ```python
 from nemcore.api import NetEaseApi
@@ -431,7 +433,7 @@ box.search('战姬绝唱')
 
 ## 下载mp3
 
-通过 `nemcore.api.NetEaseApi.get_songs_url`{.interpreted-text role="meth"} 来获取歌曲播放链接。:
+通过 `nemcore.api.NetEaseApi.get_songs_url` 来获取歌曲播放链接。:
 
 ```python
 from nemcore.api import NetEaseApi
