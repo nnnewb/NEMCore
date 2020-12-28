@@ -6,161 +6,83 @@ import os
 import platform
 import re
 from hashlib import md5
-from http.cookiejar import CookieJar, LWPCookieJar
-from typing import Mapping, Sequence, Union, Any, Dict
+from http.cookiejar import LWPCookieJar
+from typing import Mapping, Sequence
 
 import requests
+from cachetools import TTLCache, cached
 
 from nemcore import const as c
 from nemcore.encrypt import encrypted_request
 from nemcore.utils import make_cookie, raise_for_code
-from nemcore.utils.cache import cache_fn
-from nemcore.utils.compatible import PathLike
+from nemcore.cache import TTLCacheP, cache_key
+
+
+def _initialize_cookies(cookies_path=None) -> LWPCookieJar:
+    """ 初始化 Cookies
+    """
+    if cookies_path:
+        jar = LWPCookieJar(cookies_path)
+        if os.path.isfile(cookies_path):
+            jar.load()
+    else:
+        jar = LWPCookieJar()
+
+    for cookie in jar:
+        if cookie.is_expired():
+            jar.clear()
+            break
+
+    for k, v in c.BASE_COOKIES.items():
+        jar.set_cookie(make_cookie(k, v))
+
+    if cookies_path:
+        jar.save()
+
+    return jar
 
 
 class NetEaseApi(object):
     """ 网易云音乐api客户端
 
-    :ivar session: 当前会话的session，cookies从指定位置加载。如果没有指定cookie路径，会
-                   话初始化为新的未登录会话。
-    :ivar header: 当前网络请求携带的header，用于模拟浏览器行为。
-    :ivar logger: 日志记录器，如果初始化未传递 ``logger`` ，默认使用名为 ``NetEaseApi``
-                  的 ``Logger`` 。
-    :ivar profile: 当前登录用户的个人信息。
-    :ivar account: 当前登录用户的个人信息。
-
-    :param cookie_path: ``session.cookies`` 本地保存路径。如果不设置，则不会持久化 ``session.cookies``
-                        。
+    :param cookie_path: 本地保存路径。如果不设置，则不会持久化。
     :param cache_path: 网络请求的本地缓存路径，如果不设置，则只在内存缓存。
     :param cache_ttl: 请求缓存的保留时间。
     :param logger: 日志记录器。
-
-    ``self.account`` 数据字典参考如下。
-
-    .. jsonschema:: ../docs/source/schemas/userinfo/account.json
-
-    ``self.profile`` 数据字典参考如下。
-
-    .. jsonschema:: ../docs/source/schemas/userinfo/account.json
     """
 
-    def __init__(self,
-                 cookie_path: PathLike = None,
-                 cache_path: PathLike = None,
-                 cache_ttl: int = 300,
-                 logger: logging.Logger = None):
-        # yapf: disable
-        self.header = {
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip,deflate,sdch',
-            'Accept-Language': 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
-            'Connection': 'keep-alive',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Host': 'music.163.com',
-            'Referer': 'http://music.163.com',
-            'User-Agent': ' '.join([
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5)',
-                'AppleWebKit/537.36 (KHTML, like Gecko)',
-                'Chrome/59.0.3071.115 Safari/537.36',
-            ]),
-            # noqa: E501
-        }
-        # yapf: enable
+    def __init__(self, *, cookie_path=None, cache_path=None, cache_ttl=300, cache_size=100, logger=None):
         self.session = requests.Session()
-        jar = LWPCookieJar(cookie_path) if cookie_path else CookieJar()
-        self.session.cookies = jar
         self.logger = logger or logging.getLogger('NetEaseApi')
 
-        if isinstance(jar, LWPCookieJar) and os.path.isfile(cookie_path):
-            jar.load()
+        # cookies persistent
+        self._cookies_path = cookie_path
+        self.session.cookies = _initialize_cookies(cookie_path)
 
-        for cookie in self.session.cookies:
-            if cookie.is_expired():
-                # QUESTION: 任何一个cookie过期都导致登出？
-                self.session.cookies.clear()
-                break
-
-        self._set_base_cookies()
-
-        if isinstance(self.session.cookies, LWPCookieJar):
-            self.session.cookies.save()
-
-        # cache
-        self.request_cache = None
-        self.setup_cache(ttl=cache_ttl, filename=cache_path)
-
-        # login status
-        self.profile = None
-        self.account = None
-
-    def _set_base_cookies(self):
-        """ 设置基础cookie
-
-        无cookie时调用登录等接口会出现 -490 cheating 这样的错误
-
-        reference:
-
-        - `Issue #745`_
-        - `参考代码`_
-
-        .. _Issue #745: https://github.com/darknessomi/musicbox/issues/745
-        .. _参考代码: https://github.com/Binaryify/NeteaseCloudMusicApi/commit/883d94580
-        """
-        for name, value in c.BASE_COOKIES.items():
-            cookie = make_cookie(name, value)
-            self.session.cookies.set_cookie(cookie)
-
-    def _raw_request(self, method, endpoint, data=None):
-        if method == 'GET':
-            resp = self.session.get(endpoint,
-                                    params=data,
-                                    headers=self.header,
-                                    timeout=c.DEFAULT_TIMEOUT)
-        elif method == 'POST':
-            resp = self.session.post(endpoint,
-                                     data=data,
-                                     headers=self.header,
-                                     timeout=c.DEFAULT_TIMEOUT)
+        # cache persistent
+        self._cache_path = cache_path
+        self._cache_ttl = cache_ttl
+        self._cache_size = cache_size
+        if cache_path:
+            self.request_cache = TTLCacheP(cache_size, cache_ttl, cache_path)
         else:
-            raise ValueError('Unexpected request method.')
-        return resp
+            self.request_cache = TTLCache(cache_size, cache_ttl)
+
+        self.request = cached(self.request_cache, cache_key)(self._request)
+
+        # get login status
+        resp = self.get_user_account()
+        self.profile = resp['profile']
+        self.account = resp['account']
 
     @property
-    def uid(self) -> Union[int, None]:
-        """ 用户的id
+    def csrf_token(self) -> str:
+        for cookie in self.session.cookies:
+            if cookie.name == '__csrf':
+                return cookie.value
+        return ''
 
-        未登录时为None
-        """
-        if self.profile:
-            return self.profile['userId']
-        return None
-
-    def setup_cache(self, ttl: int = 300, filename: str = None):
-        """ 配置指定请求的缓存参数
-
-        允许指定缓存文件位置和缓存的保留时间。
-
-        NOTE: 通过monkey patch实现，替换了 :meth:`request` 的实现。
-
-        :param ttl: 缓存时间，单位秒
-        :param filename: 缓存文件位置，如果传入None则认为不持久化。
-        :return:
-        """
-        # cache setup
-        if filename:
-            request_cache, request = cache_fn(self.request, ttl, filepath=filename)
-        else:
-            request_cache, request = cache_fn(self.request, ttl)
-
-        setattr(self, 'request_cache', request_cache)
-        setattr(self, 'request', request)
-
-    def request(self,
-                method: str,
-                path: str,
-                params: Mapping = None,
-                default: Mapping = None,
-                custom_cookies: Mapping = None) -> Mapping:
+    def _request(self, method, path, params=None, default=None, custom_cookies=None, raw=False):
         """ 发送请求
 
         这个函数会准备好csrf token、将请求的api路径转换为合法的url、处理并保存cookies。
@@ -184,27 +106,36 @@ class NetEaseApi(object):
             custom_cookies = {}
 
         endpoint = '{}{}'.format(c.BASE_URL, path)
-        csrf_token = ''
-        for cookie in self.session.cookies:
-            if cookie.name == '__csrf':
-                csrf_token = cookie.value
-                break
-        params.update({'csrf_token': csrf_token})
-        data: Dict[Any, Any] = default.copy()
+
+        params.update({'csrf_token': self.csrf_token})
+        data = default.copy()
 
         for key, value in custom_cookies.items():
             cookie = make_cookie(key, value)
             self.session.cookies.set_cookie(cookie)
 
         params = encrypted_request(params)
-        try:
-            resp = self._raw_request(method, endpoint, params)
-            data = resp.json()
-        except json.JSONDecodeError:
-            data['message'] = 'unable to decode response'
 
-        raise_for_code(data)
-        return data
+        method = method.upper()
+        if method == 'GET':
+            resp = self.session.get(endpoint, headers=c.HEADERS, data=params, timeout=c.DEFAULT_TIMEOUT)
+        elif method == 'POST':
+            resp = self.session.post(endpoint, headers=c.HEADERS, data=params, timeout=c.DEFAULT_TIMEOUT)
+        else:
+            raise ValueError(f'unexpected method {method}')
+
+        resp.raise_for_status()
+
+        if not raw:
+            try:
+                data = resp.json()
+            except json.JSONDecodeError:
+                data['message'] = 'unable to decode response'
+
+            raise_for_code(data)
+            return data
+        else:
+            return resp.content
 
     def clear_cache(self):
         """ 清除请求缓存
@@ -214,12 +145,12 @@ class NetEaseApi(object):
     def login(self, username: str, password: str, country_code: str = '86'):
         """ 登录网易云音乐账号
 
-        支持邮箱登录和手机号码登录，cookies 会自动持久化到 ~/.netease-musicbox/cookies
-        返回登录结果。
+        支持邮箱登录和手机号码登录，返回登录结果。
 
         :param username: 用户名，如果是纯数字字符串，自动使用手机号码登录接口
         :param password: 密码
-        :return: 正常返回字典 {...}，否则抛出异常
+        :param country_code: 国家码
+        :return: 正常返回字典，否则抛出异常
         """
         username = username.strip()
         password = md5(password.encode('utf-8')).hexdigest()
@@ -258,6 +189,9 @@ class NetEaseApi(object):
 
         return data
 
+    def get_user_account(self):
+        return self.request('POST', '/api/nuser/account/get')
+
     def logout(self):
         """ 登出
 
@@ -265,9 +199,7 @@ class NetEaseApi(object):
         """
         self.profile = None
         self.account = None
-        self.session.cookies.clear()
-        self._set_base_cookies()
-        self.session.cookies.save()
+        self.session.cookies = _initialize_cookies(self._cookies_path)
 
     def get_login_status(self) -> dict:
         """ 检查登录状态
@@ -278,9 +210,9 @@ class NetEaseApi(object):
         """
         profile, bindings = None, None
         quote_regex = r'([\{\s,])(\w+)(:)'
-        resp = self._raw_request('GET', c.BASE_URL)
-        profile_result = re.search(r'GUser\s*=\s*([^;]+);', resp.text)
-        bindings_result = re.search(r'GBinds\s*=\s*([^;]+);', resp.text)
+        resp = self.request('GET', '/', raw=True)
+        profile_result = re.search(r'GUser\s*=\s*([^;]+);', resp.decode())
+        bindings_result = re.search(r'GBinds\s*=\s*([^;]+);', resp.decode())
 
         if not profile_result or not bindings_result:
             return {'code': 301, 'message': 'Not login'}
@@ -310,13 +242,7 @@ class NetEaseApi(object):
 
         :return: 不返回
         """
-        method = 'GET'
-        url = c.BASE_URL + '/weapi/login/token/refresh'
-        resp = self._raw_request(method, url, {})
-        try:
-            resp.raise_for_status()
-        except requests.HTTPError as e:
-            raise_for_code({'code': -1, 'message': str(e)}, method, url)
+        self.request('GET', '/weapi/login/token/refresh', raw=True)
 
     def daily_task(self, is_mobile: bool = True):
         """ 每日签到
@@ -328,42 +254,19 @@ class NetEaseApi(object):
         params = dict(type=0 if is_mobile else 1)
         return self.request('POST', path, params)
 
-    def get_user_playlist(self,
-                          uid: int = None,
-                          offset: int = 0,
-                          limit: int = 50):
+    def get_user_playlist(self, uid=None, offset=0, limit=50):
         """ 查看用户歌单
 
         :param uid: 用户ID,不传递时指自己的歌单
         :param offset: 分页选项，偏移值。
         :param limit: 分页选项，一次获取的项目数限制。
         :return: 正常返回字典
-
-        响应体包含下面的键
-
-        - code
-        - playlist
-        - more
-
-        playlist是一个对象列表，内容整理如下。
-
-        .. jsonschema:: ../docs/source/schemas/playlist/playlist.json
-
-        例子如下。
-
-        .. literalinclude:: examples/get_user_playlist.json
-            :language: json
-            :linenos:
-            :lines: -50
         """
-        if not uid and not self.uid:
+        if not uid and not self.profile:
             raise ValueError('尚未登陆。')
 
         path = '/weapi/user/playlist'
-        params = dict(uid=uid or self.uid,
-                      offset=offset,
-                      limit=limit,
-                      csrf_token='')
+        params = dict(uid=uid or self.profile.get('id', 0), offset=offset, limit=limit)
         return self.request('POST', path, params)
 
     def get_recommend_resource(self):
@@ -376,10 +279,7 @@ class NetEaseApi(object):
         path = '/weapi/v1/discovery/recommend/resource'
         return self.request('POST', path)
 
-    def get_recommend_songs(self,
-                            total: bool = True,
-                            offset: int = 0,
-                            limit: int = 20):
+    def get_recommend_songs(self, total: bool = True, offset: int = 0, limit: int = 20):
         """ 获得每日推荐歌曲
 
         :param total: 未知。是否一次获取全部？
@@ -392,17 +292,6 @@ class NetEaseApi(object):
         - code
         - data
             - dailySongs
-        
-        dailySongs内每个对象的结构如下。
-
-        .. jsonschema:: ../docs/source/schemas/daily-song.json
-
-        下面是一个响应的例子。
-
-        .. literalinclude:: examples/get_recommend_songs.json
-            :language: json
-            :linenos:
-            :lines: -50
         """
         path = '/weapi/v1/discovery/recommend/songs'
         params = dict(total='true' if total else 'false',
@@ -417,11 +306,7 @@ class NetEaseApi(object):
         path = '/weapi/v1/radio/get'
         return self.request('POST', path)
 
-    def fm_like(self,
-                songid: int,
-                like: bool = True,
-                time: int = 25,
-                alg: str = 'itembased'):
+    def fm_like(self, songid: int, like: bool = True, time: int = 25, alg: str = 'itembased'):
         """ 私人FM操作：喜欢
 
         :param songid: 歌曲id
@@ -452,12 +337,7 @@ class NetEaseApi(object):
         )
         return self.request('POST', path, params)
 
-    def search(self,
-               keywords: str,
-               stype: int = 1,
-               total: bool = True,
-               offset: int = 0,
-               limit: int = 50):
+    def search(self, keywords: str, stype: int = 1, total: bool = True, offset: int = 0, limit: int = 50):
         """ 搜索歌曲
 
         :param keywords: 搜索关键词
@@ -489,11 +369,7 @@ class NetEaseApi(object):
         )
         return self.request('POST', path, params)
 
-    def get_top_playlists(self,
-                          category: str = '全部',
-                          order: str = 'hot',
-                          offset: int = 0,
-                          limit: int = 50):
+    def get_top_playlists(self, category: str = '全部', order: str = 'hot', offset: int = 0, limit: int = 50):
         """ 歌单（网友精选碟）
 
         对应[首页>>发现音乐>>歌单](http://music.163.com/#/discover/playlist/)
@@ -570,10 +446,7 @@ class NetEaseApi(object):
         path = '/weapi/v1/artist/{}'.format(artist_id)
         return self.request('POST', path)
 
-    def get_artist_albums(self,
-                          artist_id: int,
-                          offset: int = 0,
-                          limit: int = 50):
+    def get_artist_albums(self, artist_id: int, offset: int = 0, limit: int = 50):
         """ 获取歌手专辑
 
         :param artist_id: 歌手ID
@@ -592,11 +465,7 @@ class NetEaseApi(object):
         path = '/weapi/v1/album/{}'.format(album_id)
         return self.request('POST', path)
 
-    def get_song_comments(self,
-                          music_id: int,
-                          total: bool = False,
-                          offset: int = 0,
-                          limit: int = 100):
+    def get_song_comments(self, music_id: int, total: bool = False, offset: int = 0, limit: int = 100):
         """ 获取歌曲评论
 
         :param music_id: 歌曲ID
@@ -662,11 +531,7 @@ class NetEaseApi(object):
         params = dict(limit=limit, offset=offset)
         return self.request('POST', path, params)
 
-    def get_djprograms(self,
-                       radio_id: int,
-                       asc: bool = False,
-                       offset: int = 0,
-                       limit: int = 50) -> Mapping:
+    def get_djprograms(self, radio_id: int, asc: bool = False, offset: int = 0, limit: int = 50) -> Mapping:
         """获取电台频道信息
 
         :param radio_id: id

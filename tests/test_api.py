@@ -139,6 +139,12 @@ def test_24_get_djprograms():
     log.debug(NetEaseApi().get_djprograms(channels['djRadios'][0]['id']))
 
 
+@pytest.mark.skip('需要登录才能测试')
+def test_25_get_user_account(api, username, password):
+    api.login(username, password)
+    api.get_user_account()
+
+
 @pytest.mark.skip('签到每天只能执行一次，不适合自动测试')
 def test_98_daily_task():
     netease = NetEaseApi()

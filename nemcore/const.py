@@ -2,6 +2,21 @@ from collections import OrderedDict
 
 from nemcore.utils import random_jsession_id, random_nuid
 
+HEADERS = {
+    'Accept': '*/*',
+    'Accept-Encoding': 'gzip,deflate,sdch',
+    'Accept-Language': 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Host': 'music.163.com',
+    'Referer': 'http://music.163.com',
+    'User-Agent': ' '.join([
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5)',
+        'AppleWebKit/537.36 (KHTML, like Gecko)',
+        'Chrome/59.0.3071.115 Safari/537.36',
+    ]),
+}
+
 BASE_COOKIES = {
     'JSESSIONID-WYYY': random_jsession_id(),
     '_iuqxldmzr_': '32',

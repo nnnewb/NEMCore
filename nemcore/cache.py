@@ -46,32 +46,7 @@ class TTLCacheP(TTLCache):
         self.save()
 
 
-def cache_key(*args, **kwargs):
+def cache_key(*args, **kwargs) -> bytes:
     """ 为了兼容 dict 参数实现的基于pickle的通用参数hash。
     """
     return pickle.dumps({'args': args, 'kwargs': kwargs})
-
-
-def cache_fn(func, ttl=600, cache=None, maxsize=100, filepath=None):
-    """ 缓存指定函数
-
-    :param func: 要包装的函数
-    :param ttl: 缓存有效时长，单位秒
-    :param cache: 明确指定使用的缓存对象，给定cache参数时ttl、maxsize、filepath参数无效
-    :param key: 计算缓存key的方法
-    :param filepath: 如果`filepath`不是`None`，则持久化缓存
-    :return: 返回被缓存包装后的函数
-    """
-    log = logging.getLogger(__name__)
-
-    if not cache:
-        if filepath:
-            cache = TTLCacheP(maxsize, ttl, filepath)
-            try:
-                cache = cache.load()
-            except Exception as e:
-                log.info('load cache failed: %s', str(e))
-        else:
-            cache = TTLCache(maxsize, ttl)
-
-    return cache, cached(cache, cache_key)(func)

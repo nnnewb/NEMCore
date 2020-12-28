@@ -1,6 +1,6 @@
 import random
 from http.cookiejar import Cookie
-from string import ascii_letters, ascii_lowercase, digits
+from string import digits, ascii_letters, ascii_lowercase
 from time import time
 
 from nemcore.exceptions import NetEaseError
