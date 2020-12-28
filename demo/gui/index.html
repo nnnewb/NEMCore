@@ -1,12 +1,46 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<h1 class="text-center">demo</h1>
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <button type="button" class="btn btn-primary">demo</button>
+    <h1 class="text-center">NEMCore Demo</h1>
+
+    <div class="container">
+        {# 登录状态 #}
+        <div class="row">
+            <div class="col-md-10">
+                {% if current_user %}
+                    <img width="36px"
+                         height="36px"
+                         src="{{ current_user['avatarUrl'] }}"
+                         alt="{{ current_user['nickname'] }}"
+                         class="img-thumbnail rounded float-left mr-3">
+                    <h4>{{ current_user['nickname'] }}</h4>
+                {% else %}
+                    <h3>未登录</h3>
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                {% if not current_user %}
+                    <button type="button"
+                            class="btn btn-primary btn-sm"
+                            data-toggle="modal"
+                            data-target="#loginModal">登录
+                    </button>
+                {% else %}
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm">登出
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {# 播放列表 和 播放列表内容(歌曲清单) #}
+        <div class="row">
+            <div class="col-md-2">
+                {% include "components/playlist.html" %}
+            </div>
+            <div class="col-md-10">
+                {% include "components/music-list.html" %}
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
