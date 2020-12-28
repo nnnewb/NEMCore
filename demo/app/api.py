@@ -1,3 +1,3 @@
 from nemcore.api import NetEaseApi
 
-api = NetEaseApi(cookie_path='.cookies', cache_path='.caches')
+api = NetEaseApi(cookie_path='.session-cookies', cache_path='.session-cache')

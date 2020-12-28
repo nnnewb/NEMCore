@@ -7,7 +7,6 @@ blueprint = Blueprint('index', __name__)
 
 @blueprint.route('/')
 def index():
-    api.get_recommend_songs()
     if api.profile:
         resp = api.get_user_playlist()
         active_playlist = request.args.get('playlist', resp['playlist'][0]['id'])

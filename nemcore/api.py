@@ -263,7 +263,7 @@ class NetEaseApi(object):
         :return: 正常返回字典
         """
         if not uid and not self.profile:
-            raise ValueError('尚未登陆。')
+            raise ValueError('需要登录')
 
         path = '/weapi/user/playlist'
         params = dict(uid=uid or self.profile.get('id', 0), offset=offset, limit=limit)
@@ -286,18 +286,12 @@ class NetEaseApi(object):
         :param offset: 分页选项，偏移值。
         :param limit: 分页选项，一次获取的项目数限制。
         :return: 返回今日推荐歌曲清单
-
-        响应包含键
-
-        - code
-        - data
-            - dailySongs
         """
+        if not self.profile:
+            raise ValueError('需要登录')
+
         path = '/weapi/v1/discovery/recommend/songs'
-        params = dict(total='true' if total else 'false',
-                      offset=offset,
-                      limit=limit,
-                      csrf_token='')
+        params = dict(total='true' if total else 'false', offset=offset, limit=limit)
         return self.request('POST', path, params)
 
     def get_personal_fm(self):
