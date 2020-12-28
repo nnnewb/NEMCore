@@ -17,10 +17,6 @@
 
 此外欢迎 code review 和 pull request。
 
-## demo 截图
-
-![demo](./docs/images/demo截图.png)
-
 ## 安装
 
 使用 pip 安装
