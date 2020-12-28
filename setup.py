@@ -3,15 +3,6 @@ from setuptools import setup, find_packages
 with open('README.md', encoding='UTF-8') as f:
     README = f.read()
 
-
-def requirements(filename):
-    with open(filename, encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                yield line
-
-
 setup(
     name='NEMCore',
     version='0.1.6',
@@ -20,13 +11,29 @@ setup(
     description='NetEase Cloud Music API wrapper',
     long_description=README,
     long_description_content_type='text/markdown',
-    install_requires=requirements('requirements/requirements.txt'),
-    packages=find_packages(exclude=('tests', 'demo')),
+    install_requires=[
+        "requests>=2.22.0",
+        "pycryptodome>=3.9",
+        "pycryptodomex>=3.9",
+        "cachetools>=4.0",
+        "filelock>=3.0"
+    ],
+    packages=find_packages(exclude=('tests',)),
     extras_require={
-        'demo': requirements('requirements/demo.txt'),
-        'lint': requirements('requirements/lint.txt'),
-        'test': requirements('requirements/test.txt'),
-        'docs': requirements('requirements/docs.txt'),
+        'lint': [
+            'pylint>=2.4',
+            'autopep8>=1.4',
+            'isort>=4.3',
+        ],
+        'test': [
+            'pytest-cov>=2.7',
+            'pytest-dotenv>=0.4.0',
+            'pytest-mock>=1.11',
+        ],
+        'docs': [
+            'mkdocs>=1.1.2',
+            'mkdocs-material>=6.2.2',
+        ],
     },
     keywords='NetEase Cloud Music API SDK',
     classifiers=[
