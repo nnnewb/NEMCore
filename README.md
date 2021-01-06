@@ -74,7 +74,7 @@ netease.daily_task()
 
 ### current
 
-** BREAKING CHANGE ! **
+**BREAKING CHANGE !**
 
 - API 返回类型修改和标注
 
