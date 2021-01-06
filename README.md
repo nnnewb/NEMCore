@@ -72,6 +72,12 @@ netease.daily_task()
 
 ## changelog
 
+### current
+
+** BREAKING CHANGE ! **
+
+- API 返回类型修改和标注
+
 ### 0.1.6
 
 - 修复 `login` 接口登录失败错误
