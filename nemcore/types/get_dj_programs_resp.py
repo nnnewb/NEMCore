@@ -1,0 +1,221 @@
+from typing import List, Any, Optional
+
+from .easy_access import EasyAccessDict
+
+
+class Dj(EasyAccessDict):
+    default_avatar: bool
+    province: int
+    auth_status: int
+    followed: bool
+    avatar_url: str
+    account_status: int
+    gender: int
+    city: int
+    birthday: int
+    user_id: int
+    user_type: int
+    nickname: str
+    signature: str
+    description: str
+    detail_description: str
+    avatar_img_id: float
+    background_img_id: float
+    background_url: str
+    authority: int
+    mutual: bool
+    expert_tags: None
+    experts: None
+    dj_status: int
+    vip_type: int
+    remark_name: None
+    authentication_types: int
+    avatar_detail: None
+    anchor: bool
+    avatar_img_id_str: str
+    background_img_id_str: str
+    dj_avatar_img_id_str: str
+    brand: str
+
+
+class Artist(EasyAccessDict):
+    name: str
+    id: int
+    pic_id: int
+    img1_v1_id: int
+    brief_desc: str
+    pic_url: str
+    img1_v1_url: str
+    album_size: int
+    alias: List[Any]
+    trans: str
+    music_size: int
+    topic_person: int
+
+
+class Album(EasyAccessDict):
+    name: Optional[str]
+    id: int
+    type: None
+    size: int
+    pic_id: float
+    blur_pic_url: Optional[str]
+    company_id: int
+    pic: float
+    pic_url: str
+    publish_time: int
+    description: str
+    tags: str
+    company: None
+    brief_desc: str
+    artist: Artist
+    songs: List[Any]
+    alias: List[Any]
+    status: int
+    copyright_id: int
+    comment_thread_id: str
+    artists: List[Artist]
+    sub_type: None
+    trans_name: None
+    mark: int
+    pic_id_str: Optional[str]
+
+
+class Music(EasyAccessDict):
+    name: None
+    id: int
+    size: int
+    extension: str
+    sr: int
+    dfs_id: int
+    bitrate: int
+    play_time: int
+    volume_delta: int
+
+
+class MainSong(EasyAccessDict):
+    name: str
+    id: int
+    position: int
+    alias: List[Any]
+    status: int
+    fee: int
+    copyright_id: int
+    disc: str
+    no: int
+    artists: List[Artist]
+    album: Album
+    starred: bool
+    popularity: int
+    score: int
+    starred_num: int
+    duration: int
+    played_num: int
+    day_plays: int
+    hear_time: int
+    ringtone: Optional[str]
+    crbt: None
+    audition: None
+    copy_from: str
+    comment_thread_id: str
+    rt_url: None
+    ftype: int
+    rt_urls: List[Any]
+    copyright: int
+    trans_name: None
+    sign: None
+    mark: int
+    no_copyright_rcmd: None
+    h_music: Optional[Music]
+    m_music: Optional[Music]
+    l_music: Music
+    b_music: Music
+    rtype: int
+    rurl: None
+    mvid: int
+    mp3_url: None
+
+
+class Radio(EasyAccessDict):
+    dj: None
+    category: str
+    second_category: None
+    buyed: bool
+    price: int
+    original_price: int
+    discount_price: None
+    purchase_count: int
+    last_program_name: None
+    videos: None
+    finished: bool
+    under_shelf: bool
+    live_info: None
+    play_count: int
+    privacy: bool
+    icon: None
+    last_program_id: int
+    create_time: int
+    category_id: int
+    fee_scope: int
+    pic_id: float
+    last_program_create_time: int
+    sub_count: int
+    program_count: int
+    radio_fee_type: int
+    pic_url: str
+    desc: str
+    name: str
+    id: int
+    subed: bool
+
+
+class Program(EasyAccessDict):
+    main_song: MainSong
+    songs: None
+    dj: Dj
+    blur_cover_url: str
+    radio: Radio
+    duration: int
+    buyed: bool
+    program_desc: None
+    h5_links: None
+    can_reward: bool
+    audit_status: int
+    video_info: None
+    score: int
+    live_info: None
+    alg: None
+    dis_play_status: None
+    reward: bool
+    create_time: int
+    cover_url: str
+    channels: List[str]
+    fee_scope: int
+    track_count: int
+    subscribed_count: int
+    listener_count: int
+    pub_status: int
+    bd_audit_status: int
+    small_language_audit_status: int
+    program_fee_type: int
+    comment_thread_id: str
+    privacy: bool
+    titbits: None
+    main_track_id: int
+    description: str
+    serial_num: int
+    titbit_images: None
+    is_publish: bool
+    name: str
+    id: int
+    share_count: int
+    subscribed: bool
+    liked_count: int
+    comment_count: int
+
+
+class GetDjProgramsResp(EasyAccessDict):
+    count: int
+    code: int
+    programs: List[Program]
+    more: bool

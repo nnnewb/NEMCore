@@ -29,64 +29,19 @@ pip install nemcore
 ```python
 from nemcore.api import NetEaseApi
 
-box = NetEaseApi(cookie_path='./cookies')
-box.login('cloudmusic@163.com', 'password')
-print(box.uid)
+api = NetEaseApi(cookie_path='./cookies')
+api.login('cloudmusic@163.com', 'password')
+print(api.profile.nickname)
 ```
 
-上面的例子代码应该输出你的用户 id。
+上面的例子代码应该输出你的用户昵称。
 
 如果登陆失败，上面的代码会抛出
 `nemcore.exceptions.NetEaseError` ，异常对象的 `code` 和 `message` 属性描述了错误的原因。
 
-你还可以从`box.profile`属性获得当前用户的更多信息。:
-
-```python
-from nemcore.api import NetEaseApi
-
-box = NetEaseApi(cookie_path='./cookies')
-```
+你还可以从`api.profile`属性获得当前用户的更多信息。:
 
 美化后的输出类似于下面的样子（内容已脱敏）：:
-
-```json
-{
-  "mutual": false,
-  "remarkName": null,
-  "userType": 0,
-  "djStatus": 0,
-  "expertTags": null,
-  "authStatus": 0,
-  "experts": {},
-  "followed": false,
-  "backgroundUrl": "",
-  "detailDescription": "",
-  "vipType": 0,
-  "gender": 0,
-  "accountStatus": 0,
-  "description": "",
-  "defaultAvatar": true,
-  "avatarImgId": 0,
-  "nickname": "",
-  "birthday": 0,
-  "userId": 0,
-  "backgroundImgId": 0,
-  "avatarUrl": "",
-  "province": 0,
-  "city": 100,
-  "backgroundImgIdStr": "",
-  "avatarImgIdStr": "",
-  "signature": "",
-  "authority": 0,
-  "avatarImgId_str": "",
-  "followeds": 0,
-  "follows": 3,
-  "eventCount": 0,
-  "avatarDetail": null,
-  "playlistCount": 1,
-  "playlistBeSubscribedCount": 0
-}
-```
 
 ## 登出
 
