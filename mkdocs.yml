@@ -1,8 +1,0 @@
-site_name: NEMCore
-theme: material
-nav:
-  - index: index.md
-  - 快速开始: quickstart.md
-markdown_extensions:
-  - pymdownx.highlight
-  - pymdownx.superfences

@@ -1,3 +1,0 @@
-include README.md LICENSE setup.cfg
-recursive-include nemcore *.py
-recursive-include docs *.md

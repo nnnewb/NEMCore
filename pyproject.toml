@@ -4,12 +4,22 @@ version = "0.1.6"
 description = "NetEase Cloud Music api client"
 authors = ["weak_ptr <weak_ptr@outlook.com>"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/nnnewb/nemcore"
+repository = "https://github.com/nnnewb/nemcore"
+documentation = "https://nemcore.readthedocs.io/en/latest/"
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Natural Language :: Chinese (Simplified)',
+    'Programming Language :: Python :: 3 :: Only',
+    'Typing :: Typed'
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-requests="^2.22.0"
-pycryptodomex="^3.9"
-cachetools="^4.0"
+requests = "^2.22.0"
+pycryptodomex = "^3.9"
+cachetools = "^4.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
