@@ -1,1 +1,0 @@
-pydoc-markdown -p NEMCore pydoc-markdown.yml
