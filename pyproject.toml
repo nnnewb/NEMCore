@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "NEMCore"
+version = "0.1.6"
+description = "NetEase Cloud Music api client"
+authors = ["weak_ptr <weak_ptr@outlook.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests="^2.22.0"
+pycryptodomex="^3.9"
+cachetools="^4.0"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.6.0"
+autopep8 = "^1.5.4"
+isort = "^5.7.0"
+pytest = "^6.2.1"
+pytest-cov = "^2.10.1"
+pytest-dotenv = "^0.5.2"
+pytest-mock = "^3.5.0"
+mkdocs = "^1.1.2"
+mkdocs-material = "^6.2.3"
+Sphinx = "^3.4.2"
+mypy = "^0.790"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
