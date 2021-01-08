@@ -74,6 +74,10 @@ netease.daily_task()
 
 ### current
 
+### 0.1.8
+
+- fix ImportError about filelock
+
 ### 0.1.7
 
 **BREAKING CHANGE !**
