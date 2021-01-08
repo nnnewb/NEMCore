@@ -1,9 +1,7 @@
-import logging
 import pickle
 import time
 
-from cachetools import Cache, TTLCache, cached
-from filelock import FileLock
+from cachetools import Cache, TTLCache
 
 
 class TTLCacheP(TTLCache):
@@ -22,14 +20,12 @@ class TTLCacheP(TTLCache):
         self.filepath = filepath
 
     def save(self):
-        with FileLock(self.filepath + '.lock'):
-            with open(self.filepath, 'w+b') as f:
-                pickle.dump(self, f)
+        with open(self.filepath, 'w+b') as f:
+            pickle.dump(self, f)
 
     def load(self):
-        with FileLock(self.filepath + '.lock'):
-            with open(self.filepath, 'rb') as f:
-                return pickle.load(f)
+        with open(self.filepath, 'rb') as f:
+            return pickle.load(f)
 
     def __setitem__(self, key, value, cache_setitem=Cache.__setitem__):
         ret = super().__setitem__(key, value, cache_setitem=cache_setitem)
