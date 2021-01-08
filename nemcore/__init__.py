@@ -1,1 +1,3 @@
-__version__ = "0.1.6"
+from importlib_metadata import version
+
+__version__ = version('NEMCore')

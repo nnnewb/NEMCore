@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "NEMCore"
-version = "0.1.6"
+version = "0.1.7"
 description = "NetEase Cloud Music api client"
 authors = ["weak_ptr <weak_ptr@outlook.com>"]
 license = "MIT"
@@ -20,6 +20,7 @@ python = "^3.6"
 requests = "^2.22.0"
 pycryptodomex = "^3.9"
 cachetools = "^4.0"
+importlib-metadata = "^3.3.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
