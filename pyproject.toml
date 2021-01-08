@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "NEMCore"
-version = "0.1.7"
+version = "0.1.8"
 description = "NetEase Cloud Music api client"
 authors = ["weak_ptr <weak_ptr@outlook.com>"]
 license = "MIT"
