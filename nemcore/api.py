@@ -136,7 +136,14 @@ class NetEaseApi(object):
             try:
                 data = resp.json()
             except json.JSONDecodeError:
-                data['message'] = 'unable to decode response'
+                raise NetEaseError(
+                    -1,
+                    'unable to decode response',
+                    data=resp.content,
+                    url=resp.request.url,
+                    method=resp.request.method,
+                    payload=resp.request.body,
+                )
 
             raise_for_code(data)
             return data
@@ -460,12 +467,17 @@ class NetEaseApi(object):
         }
         return GetSongDetailResp(self.request('POST', path, params))
 
-    def get_songs_url(self, ids: Sequence[int], quality: int) -> GetSongURLResp:
+    def get_songs_url(self, ids: Union[Sequence[int], int], quality: int) -> GetSongURLResp:
         """ 获取歌曲播放url
 
-        :param ids: 歌曲id列表
+        :param ids: 单个或多个歌曲 id
         :param quality: 音质档次，可选值0-2，分别对应 320kbps,192kbps,128kbps 三种质量
         """
+        if isinstance(ids, int):
+            ids = [ids]
+        else:
+            ids = list(ids)
+
         rate_map = {0: 320000, 1: 192000, 2: 128000}
 
         path = '/weapi/song/enhance/player/url'
