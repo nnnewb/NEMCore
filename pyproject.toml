@@ -15,6 +15,14 @@ classifiers = [
     'Typing :: Typed'
 ]
 
+[tool.autopep8]
+max_line_length = 120
+
+[[tool.poetry.source]]
+name = 'tuna'
+url = 'https://pypi.tuna.tsinghua.edu.cn/simple'
+default = true
+
 [tool.poetry.dependencies]
 python = "^3.6"
 requests = "^2.22.0"
